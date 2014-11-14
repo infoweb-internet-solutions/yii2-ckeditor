@@ -10,7 +10,7 @@ require(__DIR__ . '/../../../../../../vendor/yiisoft/yii2/Yii.php');
 require(__DIR__ . '/../../../../../../common/config/aliases.php');
 
 // General
-$moxieManagerConfig['general.license'] = 'QW2Y-FFGE-HVWX-HJ7G-FKNF-PAEC-CZUA-NKFX';
+$moxieManagerConfig['general.license'] = '';
 $moxieManagerConfig['general.hidden_tools'] = '';
 $moxieManagerConfig['general.disabled_tools'] = '';
 $moxieManagerConfig['general.plugins'] = 'Favorites,History,Uploaded';
