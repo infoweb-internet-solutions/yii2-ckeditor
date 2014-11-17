@@ -7,22 +7,22 @@ require(__DIR__ . '/../../../../../../vendor/autoload.php');
 require(__DIR__ . '/../../../../../../vendor/yiisoft/yii2/Yii.php');
 
 // include aliases
-require(__DIR__ . '/../../../../../../common/config/aliases.php');
+require(__DIR__ . '/../../../../../../common/config/bootstrap.php');
 
 // General
-$moxieManagerConfig['general.license'] = Yii::getAlias('@moxiemanager');
+$moxieManagerConfig['general.license'] = \Yii::getAlias('@moxieManagerKey');
 $moxieManagerConfig['general.hidden_tools'] = '';
 $moxieManagerConfig['general.disabled_tools'] = '';
 $moxieManagerConfig['general.plugins'] = 'Favorites,History,Uploaded';
 $moxieManagerConfig['general.demo'] = false;
 $moxieManagerConfig['general.debug'] = false;
-$moxieManagerConfig['general.language'] = 'en';
+$moxieManagerConfig['general.language'] = 'nl';
 $moxieManagerConfig['general.temp_dir'] = '';
 $moxieManagerConfig['general.allow_override'] = 'hidden_tools,disabled_tools';
 
 // Filesystem
 // @todo Update path
-$moxieManagerConfig['filesystem.rootpath'] = \Yii::getAlias('@media/rootpath');
+$moxieManagerConfig['filesystem.rootpath'] = \Yii::getAlias('@uploadsBaseUrl');
 $moxieManagerConfig['filesystem.include_directory_pattern'] = '';
 $moxieManagerConfig['filesystem.exclude_directory_pattern'] = '/^mcith$/i';
 $moxieManagerConfig['filesystem.include_file_pattern'] = '';
@@ -120,8 +120,8 @@ $moxieManagerConfig['ExternalAuthenticator.basic_auth_user'] = '';
 $moxieManagerConfig['ExternalAuthenticator.basic_auth_password'] = '';
 
 // Local filesystem
-$moxieManagerConfig['filesystem.local.wwwroot'] = '';
-$moxieManagerConfig['filesystem.local.urlprefix'] = '';
+$moxieManagerConfig['filesystem.local.wwwroot'] = 'C:/wamp/www/www.vangompelrenette.be';
+$moxieManagerConfig['filesystem.local.urlprefix'] = 'http://localhost/www.vangompelrenette.be';
 $moxieManagerConfig['filesystem.local.urlsuffix'] = '';
 $moxieManagerConfig['filesystem.local.access_file_name'] = 'mc_access';
 $moxieManagerConfig['filesystem.local.cache'] = false;
