@@ -23,11 +23,17 @@ class MOXMAN_Handlers_JsonRpcHandler implements MOXMAN_Http_IHandler {
 		$response->disableCache();
 		$response->setHeader('Content-type', 'application/json');
 
-		@set_time_limit(5 * 60); // 5 minutes execution time
-
 		$id = null;
 
 		try {
+			if ($request->getMethod() != 'POST') {
+				throw new MOXMAN_Exception("Not a HTTP post request.");
+			}
+
+			if (!MOXMAN_Http_Csrf::verifyToken(MOXMAN::getConfig()->get('general.license'), $request->get('csrf'))) {
+				throw new MOXMAN_Exception("Invalid csrf token.");
+			}
+
 			$json = MOXMAN_Util_Json::decode($request->get("json"));
 
 			// Check if we should install
@@ -83,7 +89,8 @@ class MOXMAN_Handlers_JsonRpcHandler implements MOXMAN_Http_IHandler {
 				$response->sendJson((object) array(
 					"jsonrpc" => "2.0",
 					"result" => $result,
-					"id" => $id
+					"id" => $id,
+					"token" => MOXMAN_Http_Csrf::createToken(MOXMAN::getConfig()->get('general.license'))
 				));
 			} else {
 				throw new Exception("Invalid Request.", -32600);

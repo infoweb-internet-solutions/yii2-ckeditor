@@ -152,7 +152,9 @@ class MOXMAN_Vfs_Local_File extends MOXMAN_Vfs_BaseFile {
 			throw new Exception("You can't move the file into it self.");
 		}
 
-		$status = rename($this->internalPath, $this->fromUtf($dest->getPath()));
+		if (!rename($this->internalPath, $this->fromUtf($dest->getPath()))) {
+			throw new Exception("Rename of local file failed; " . $this->getPublicPath());
+		}
 	}
 
 	/**
@@ -248,14 +250,14 @@ class MOXMAN_Vfs_Local_File extends MOXMAN_Vfs_BaseFile {
 			$fileSystem = $this->getFileSystem();
 
 			$dirPath = $this->getPath();
-			if ($dirHandle = opendir($dirPath)) {
+			if ($dirHandle = opendir($this->internalPath)) {
 				while (false !== ($name = readdir($dirHandle))) {
 					// Ignore current, parent and access file name
 					if ($name === "." || $name === ".." || $name === $accessFileName) {
 						continue;
 					}
 
-					$file = new MOXMAN_Vfs_Local_File($fileSystem, $dirPath . "/" . $name);
+					$file = new MOXMAN_Vfs_Local_File($fileSystem, $dirPath . "/" . $this->toUtf($name));
 					if ($filter->accept($file)) {
 						$files[] = $file;
 					}
@@ -345,28 +347,36 @@ class MOXMAN_Vfs_Local_File extends MOXMAN_Vfs_BaseFile {
 
 	/** @ignore */
 	private function copyDir($from, $to) {
-		$fromPathRoot = $from->getPath();
+		$fromPathRoot = $from->getInternalPath();
 		$files = $this->getFiles($fromPathRoot);
 
+		if ($to instanceof MOXMAN_Vfs_Local_File) {
+			$toPathRoot = $to->getInternalPath();
+		} else {
+			$toPathRoot = $to->getPath();
+		}
+
 		foreach ($files as $fromPath) {
-			$toPath = MOXMAN_Util_PathUtils::combine($to->getPath(), substr($fromPath, strlen($fromPathRoot)));
+			$toPath = MOXMAN_Util_PathUtils::combine($toPathRoot, substr($fromPath, strlen($fromPathRoot)));
 
 			if (is_file($fromPath)) {
 				if ($to instanceof MOXMAN_Vfs_Local_File) {
 					copy($fromPath, $toPath);
 				} else {
-					$to->getFileSystem()->getFile($toPath)->importFrom($fromPath);
+					$to->getFileSystem()->getFile($this->toUtf($toPath))->importFrom($fromPath);
 				}
 			} else {
 				if ($to instanceof MOXMAN_Vfs_Local_File) {
 					$this->fileSystem->verifyPath($toPath, "dir");
 					mkdir($toPath);
 				} else {
-					$to->getFileSystem()->getFile($toPath)->mkdir();
+					$to->getFileSystem()->getFile($this->toUtf($toPath))->mkdir();
 				}
 			}
 		}
 	}
+
+	// @codeCoverageIgnoreStart
 
 	private function fromUtf($path) {
 		if (DIRECTORY_SEPARATOR == "\\" && function_exists("mb_convert_encoding")) {
@@ -388,6 +398,8 @@ class MOXMAN_Vfs_Local_File extends MOXMAN_Vfs_BaseFile {
 
 		return $path;
 	}
+
+	// @codeCoverageIgnoreEnd
 }
 
 ?>

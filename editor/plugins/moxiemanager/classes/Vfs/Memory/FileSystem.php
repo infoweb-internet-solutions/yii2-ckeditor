@@ -29,6 +29,8 @@ class MOXMAN_Vfs_Memory_FileSystem extends MOXMAN_Vfs_FileSystem {
 		$this->addEntry($root, array(
 			"isFile" => false
 		));
+
+		$this->setFileUrlResolver(new MOXMAN_Vfs_Memory_FileUrlResolver($this));
 	}
 
 	/** @ignore */
@@ -52,12 +54,24 @@ class MOXMAN_Vfs_Memory_FileSystem extends MOXMAN_Vfs_FileSystem {
 	/** @ignore */
 	public function getChildEntries($path = "/") {
 		$entries = array();
+		$matchPath = $path == "/" ? "/" : $path . "/";
 
 		for ($i = 0, $l = count($this->entries); $i < $l; $i++) {
 			$entryPath = $this->entries[$i]->path;
-			if (strpos($entryPath, $path . '/') === 0 && strpos($entryPath, "/", strlen($path . '/')) === false) {
-				$entries[] = $this->entries[$i];
+
+			if ($entryPath === $matchPath) {
+				continue;
 			}
+
+			if (strpos($entryPath, $matchPath) !== 0) {
+				continue;
+			}
+
+			if (strpos($entryPath, "/", strlen($matchPath)) !== false) {
+				continue;
+			}
+
+			$entries[] = $this->entries[$i];
 		}
 
 		return $entries;

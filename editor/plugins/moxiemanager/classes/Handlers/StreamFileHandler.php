@@ -43,7 +43,13 @@ class MOXMAN_Handlers_StreamFileHandler implements MOXMAN_Http_IHandler {
 
 		// Create thumbnail
 		if ($request->get("thumb")) {
-			$file = $this->plugin->createThumbnail($file);
+			try {
+				$file = $this->plugin->createThumbnail($file);
+			} catch (Exception $e) {
+				$response->setStatus("500", "Could not generate thumbnail.");
+				$response->sendContent("Could not generate thumbnail.");
+				return;
+			}
 		}
 
 		// Fire before stream event
@@ -53,7 +59,6 @@ class MOXMAN_Handlers_StreamFileHandler implements MOXMAN_Http_IHandler {
 
 		// Stream temp file if it exists
 		if ($tempName = $request->get("tempname")) {
-			$config = $file->getConfig();
 			$ext = MOXMAN_Util_PathUtils::getExtension($file->getName());
 			$tempName = "mcic_" . md5(session_id() . $file->getName()) . "." . $ext;
 			$tempFilePath = MOXMAN_Util_PathUtils::combine(MOXMAN_Util_PathUtils::getTempDir(), $tempName);

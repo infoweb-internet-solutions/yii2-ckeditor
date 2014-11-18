@@ -10,7 +10,6 @@
  *
  * @package MOXMAN_Handlers
  */
-
 class MOXMAN_Handlers_UploadHandler implements MOXMAN_Http_IHandler {
 	/**
 	 * Process a request using the specified context.
@@ -25,6 +24,14 @@ class MOXMAN_Handlers_UploadHandler implements MOXMAN_Http_IHandler {
 		$response = $httpContext->getResponse();
 
 		try {
+			if ($request->getMethod() != 'POST') {
+				throw new MOXMAN_Exception("Not a HTTP post request.");
+			}
+
+			if (!MOXMAN_Http_Csrf::verifyToken(MOXMAN::getConfig()->get('general.license'), $request->get('csrf'))) {
+				throw new MOXMAN_Exception("Invalid csrf token.");
+			}
+
 			// Check if the user is authenticated or not
 			if (!MOXMAN::getAuthManager()->isAuthenticated()) {
 				if (!isset($json->method) || !preg_match('/^(login|logout)$/', $json->method)) {
@@ -48,13 +55,14 @@ class MOXMAN_Handlers_UploadHandler implements MOXMAN_Http_IHandler {
 				);
 			}
 
-			$maxSizeBytes = preg_replace("/[^0-9.]/", "", $config->get("upload.maxsize"));
+			$uploadMaxSize = $config->get("upload.maxsize", "10mb");
+			$maxSizeBytes = preg_replace("/[^0-9.]/", "", $uploadMaxSize);
 
-			if (strpos((strtolower($config->get("upload.maxsize"))), "k") > 0) {
+			if (strpos(strtolower($uploadMaxSize), "k") > 0) {
 				$maxSizeBytes = round(floatval($maxSizeBytes) * 1024);
 			}
 
-			if (strpos((strtolower($config->get("upload.maxsize"))), "m") > 0) {
+			if (strpos(strtolower($uploadMaxSize), "m") > 0) {
 				$maxSizeBytes = round(floatval($maxSizeBytes) * 1024 * 1024);
 			}
 
@@ -90,29 +98,12 @@ class MOXMAN_Handlers_UploadHandler implements MOXMAN_Http_IHandler {
 			}
 
 			// Operations on first chunk
-			if ($loaded == 0) {
-				// Fire before file action add event
-				//$args = new MOXMAN_Vfs_FileActionEventArgs("add", $file);
-				//$args->getData()->fileSize = $total;
-				//MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
-				//$file = $args->getFile();
-
-				if ($file->exists()) {
-					if (!$config->get("upload.overwrite") && !$request->get("overwrite")) {
-						throw new MOXMAN_Exception("Target file exists: " . $file->getPublicPath(), MOXMAN_Exception::FILE_EXISTS);
-					} else {
-						MOXMAN::getPluginManager()->get("core")->deleteThumbnail($file);
-						$file->delete();
-					}
-				}
-
-				$filter = MOXMAN_Vfs_CombinedFileFilter::createFromConfig($config, "upload");
-				if (!$filter->accept($file)) {
-					throw new MOXMAN_Exception(
-						"Invalid file name for: " . $file->getPublicPath(),
-						MOXMAN_Exception::INVALID_FILE_NAME
-					);
-				}
+			$filter = MOXMAN_Vfs_CombinedFileFilter::createFromConfig($config, "upload");
+			if (!$filter->accept($file)) {
+				throw new MOXMAN_Exception(
+					"Invalid file name for: " . $file->getPublicPath(),
+					MOXMAN_Exception::INVALID_FILE_NAME
+				);
 			}
 
 			$blobSize = 0;
@@ -182,17 +173,36 @@ class MOXMAN_Handlers_UploadHandler implements MOXMAN_Http_IHandler {
 					);
 				}
 
+				if ($file->exists()) {
+					$overwrite = $config->get("upload.overwrite");
+					if ($overwrite === "true" || $overwrite === true) {
+						MOXMAN::getPluginManager()->get("core")->deleteThumbnail($file);
+
+						// Fire file actions for delete operation in a overwrite
+						$args = new MOXMAN_Vfs_FileActionEventArgs("delete", $file);
+						MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
+						$args = new MOXMAN_Vfs_FileActionEventArgs("delete", $file);
+						MOXMAN::getPluginManager()->get("core")->fire("FileAction", $args);
+
+						$file->delete();
+					} else if ($overwrite === "false" || $overwrite === false) {
+						throw new MOXMAN_Exception("Target file exists: " . $file->getPublicPath(), MOXMAN_Exception::FILE_EXISTS);
+					} else if ($overwrite == "rename") {
+						$file = MOXMAN_Util_FileUtils::uniqueFile($file);
+					}
+				}
+
 				// Resize the temporary blob
 				if ($config->get("upload.autoresize") && preg_match('/gif|jpe?g|png/i', MOXMAN_Util_PathUtils::getExtension($tempFilePath)) === 1) {
 					$size = getimagesize($tempFilePath);
-					$maxWidth = $config->get('upload.max_width');
-					$maxHeight = $config->get('upload.max_height');
+					$maxWidth = $config->get('upload.max_width', -1);
+					$maxHeight = $config->get('upload.max_height', -1);
 
-					if ($size[0] > $maxWidth || $size[1] > $maxHeight) {
+					if ($maxWidth > 0 && $maxHeight > 0 && ($size[0] > $maxWidth || $size[1] > $maxHeight)) {
 						$imageAlter = new MOXMAN_Media_ImageAlter();
 						$imageAlter->load($tempFilePath);
 						$imageAlter->resize($maxWidth, $maxHeight, true);
-						$imageAlter->save($tempFilePath, $config->get("upload.autoresize_jpeg_quality"));
+						$imageAlter->save($tempFilePath, $config->get("upload.autoresize_jpeg_quality", 90));
 					}
 				}
 

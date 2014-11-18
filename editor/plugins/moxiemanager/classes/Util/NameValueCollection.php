@@ -111,6 +111,15 @@ class MOXMAN_Util_NameValueCollection implements IteratorAggregate {
 	}
 
 	/**
+	 * Sets the internal items array.
+	 *
+	 * @param Array $items Internal name/value array with items.
+	 */
+	public function putAll($items) {
+		$this->items = $items;
+	}
+
+	/**
 	 * Returns an iterator intance for the internal array.
 	 *
 	 * @reutrn ArrayIterator Iterator instance.

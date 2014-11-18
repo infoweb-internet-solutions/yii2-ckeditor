@@ -22,18 +22,21 @@ class MOXMAN_Commands_InstallCommand extends MOXMAN_Commands_BaseCommand {
 
 		if (file_exists($templatePath)) {
 			// Get all data
-			$license = $params->license;
+			$license = trim($params->license);
 			$authenticator = $params->authenticator;
 			$username = $params->username;
 			$password = $params->password;
-			$logged_in_key = $params->logged_in_key;
+			$loggedInKey = $params->logged_in_key;
 
 			// Verify input
-			if (!preg_match('/^([0-9A-Z]{4}\-){7}[0-9A-Z]{4}$/', trim($license))) {
+			if (!preg_match('/^([0-9A-Z]{4}\-){7}[0-9A-Z]{4}$/', $license)) {
 				throw new MOXMAN_Exception("Invalid license: " . $license);
 			}
 
-			if ($authenticator == "basic") {
+			// Update the license since it will later be used by the csrf logic
+			MOXMAN::getConfig()->put("general.license", $license);
+
+			if ($authenticator == "BasicAuthenticator") {
 				$params->authenticator = "BasicAuthenticator";
 
 				if (!$username) {
@@ -45,10 +48,10 @@ class MOXMAN_Commands_InstallCommand extends MOXMAN_Commands_BaseCommand {
 				}
 			}
 
-			if ($authenticator == "session") {
+			if ($authenticator == "SessionAuthenticator") {
 				$params->authenticator = "SessionAuthenticator";
 
-				if (!$logged_in_key) {
+				if (!$loggedInKey) {
 					throw new MOXMAN_Exception("Session name can't be empty.");
 				}
 			}

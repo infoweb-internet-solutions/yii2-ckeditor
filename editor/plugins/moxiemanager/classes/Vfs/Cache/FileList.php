@@ -63,7 +63,7 @@ class MOXMAN_Vfs_Cache_FileList extends MOXMAN_Vfs_FileList {
 		}
 
 		// Get one extra file so we know if it's the last chunk or not
-		$length += 1;
+		$length++;
 		$chunkLength = $length + 10;
 		$files = array();
 
@@ -238,7 +238,7 @@ class MOXMAN_Vfs_Cache_FileList extends MOXMAN_Vfs_FileList {
 						$extensionsQuery .= " OR ";
 					}
 
-					$extensionsQuery .= "mc_extension = '" . $extension . "'";
+					$extensionsQuery .= "LOWER(mc_extension) = '" . strtolower($extension) . "'";
 				}
 			}
 

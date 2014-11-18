@@ -161,19 +161,20 @@ class MOXMAN_Util_PathUtils {
 	 *
 	 * @param string $file Site absolute path /var/www/dir/file
 	 * @param string $script URL path. /dir/file
-	 *
 	 * @return Array With wwwroot and prefix.
 	 */
 	public static function getSitePaths($file = "", $script = "") {
+		// @codeCoverageIgnoreStart
 		if (self::$sitePaths && !defined('PHPUNIT')) {
 			return self::$sitePaths;
 		}
+		// @codeCoverageIgnoreEnd
 
 		// Check if we have a defined MOXMAN_API_FILE this might not be the case
 		// if MOXMAN.php is loaded directly we then need to fallback to SCRIPT_FILENAME
-	/*	if (!$file && defined("MOXMAN_API_FILE")) {
-			$file = MOXMAN_API_FILE;
-		}*/
+		//if (!$file && defined("MOXMAN_API_FILE")) {
+		//	$file = MOXMAN_API_FILE;
+		//}
 
 		$file = $file ? $file : MOXMAN_ROOT;
 		$script = $script ? $script : dirname($_SERVER["SCRIPT_NAME"]);
@@ -211,12 +212,14 @@ class MOXMAN_Util_PathUtils {
 			$config = MOXMAN::getConfig();
 		}
 
+		// @codeCoverageIgnoreStart
 		$path = $config->get("general.temp_dir");
 		if (!$path) {
 			$path = sys_get_temp_dir();
 
 			// is_writeable can't be checked on temp dir.
 		}
+		// @codeCoverageIgnoreEnd
 
 		return $path;
 	}

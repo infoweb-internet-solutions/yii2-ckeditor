@@ -9,6 +9,7 @@
  * Core plugin contains core commands and logic.
  *
  * @package MOXMAN
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMAN_Http_IHandler {
 	/** @ignore */
@@ -106,6 +107,11 @@ class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMA
 
 		if ($action == "language") {
 			$instance = new MOXMAN_Handlers_LanguageHandler($this);
+			$instance->processRequest($httpContext);
+		}
+
+		if ($action == "token") {
+			$instance = new MOXMAN_Handlers_TokenHandler($this);
 			$instance->processRequest($httpContext);
 		}
 
@@ -245,20 +251,25 @@ class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMA
 				$width = 0;
 				$height = 0;
 
-				$exifImage = @exif_thumbnail(
-					$localTempFile ? $localTempFile : $file->getInternalPath(),
-					$width,
-					$height,
-					$imageType
-				);
+				try {
+					// Silently fail this, hence the @, some exif data can be corrupt.
+					$exifImage = @exif_thumbnail(
+						$localTempFile ? $localTempFile : $file->getInternalPath(),
+						$width,
+						$height,
+						$imageType
+					);
 
-				if ($exifImage) {
-					$stream = $thumbnailFile->open(MOXMAN_Vfs_IFileStream::WRITE);
-					$stream->write($exifImage);
-					$stream->close();
+					if ($exifImage) {
+						$stream = $thumbnailFile->open(MOXMAN_Vfs_IFileStream::WRITE);
+						$stream->write($exifImage);
+						$stream->close();
 
-					$this->fireThumbnailFileAction(MOXMAN_Vfs_FileActionEventArgs::ADD, $thumbnailFile);
-					return $thumbnailFile;
+						$this->fireThumbnailFileAction(MOXMAN_Vfs_FileActionEventArgs::ADD, $thumbnailFile);
+						return $thumbnailFile;
+					}
+				} catch (Exception $e) {
+					// Ignore exif failure
 				}
 			}
 		}
@@ -302,6 +313,15 @@ class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMA
 		if ($thumbnailFile->exists()) {
 			$thumbnailFile->delete();
 			$this->fireThumbnailFileAction(MOXMAN_Vfs_FileActionEventArgs::DELETE, $thumbnailFile);
+
+			// Was this last image in folder, if so, delete it.
+			$thumbnailFolder = $thumbnailFile->getParentFile();
+			if (count($thumbnailFolder->listFiles()->limit(0, 1)->toArray()) == 0) {
+				$thumbnailFolder->delete();
+
+				$args = new MOXMAN_Vfs_FileActionEventArgs(MOXMAN_Vfs_FileActionEventArgs::DELETE, $thumbnailFolder);
+				MOXMAN::getPluginManager()->get("core")->fire("FileAction", $args);
+			}
 			return true;
 		}
 
@@ -407,7 +427,7 @@ class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMA
 
 				// TODO: Implement stat info cache layer here
 				if ($file instanceof MOXMAN_Vfs_Local_File) {
-					$info = MOXMAN_Media_MediaInfo::getInfo($file);
+					$info = MOXMAN_Media_MediaInfo::getInfo($file->getPath());
 					$metaData->width = $info["width"];
 					$metaData->height = $info["height"];
 				}
@@ -417,7 +437,7 @@ class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMA
 
 					// Get image size server side only on local filesystem
 					if ($file instanceof MOXMAN_Vfs_Local_File) {
-						$info = MOXMAN_Media_MediaInfo::getInfo($thumbnailFile);
+						$info = MOXMAN_Media_MediaInfo::getInfo($thumbnailFile->getPath());
 						$metaData->thumb_width = $info["width"];
 						$metaData->thumb_height = $info["height"];
 					}
@@ -435,6 +455,12 @@ class MOXMAN_CorePlugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler, MOXMA
 	private function fireThumbnailFileAction($action, $file, $data = array()) {
 		$args = new MOXMAN_Vfs_FileActionEventArgs($action, $file);
 		$args->getData()->thumb = true;
+
+		if (!empty($data)) {
+			foreach ($data as $key => $value) {
+				$args->getData()->{$key} = $value;
+			}
+		}
 
 		return MOXMAN::getPluginManager()->get("core")->fire("FileAction", $args);
 	}

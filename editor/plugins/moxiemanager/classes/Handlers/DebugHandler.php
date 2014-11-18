@@ -32,9 +32,9 @@ class MOXMAN_Handlers_DebugHandler implements MOXMAN_Http_IHandler {
 
 		if ($request->get("info")) {
 			phpinfo();
-			die();
+			return;
 		}
-		
+
 		$sitepaths = MOXMAN_Util_PathUtils::getSitePaths();
 
 		$scriptFilename = $_SERVER["SCRIPT_FILENAME"];
@@ -42,10 +42,9 @@ class MOXMAN_Handlers_DebugHandler implements MOXMAN_Http_IHandler {
 			$scriptFilename = $scriptFilename . "<br />(". realpath($scriptFilename) .")";
 		}
 
-
 		if (function_exists("imagecreatefromjpeg")) {
 			$gdInfo = gd_info();
-			
+
 			$outInfo = "Ver:". $gdInfo["GD Version"];
 			$outInfo .= " GIF:". ($gdInfo["GIF Create Support"] ? "Y" : "N");
 			$outInfo .= " PNG:". ($gdInfo["PNG Support"] ? "Y" : "N");
@@ -53,7 +52,6 @@ class MOXMAN_Handlers_DebugHandler implements MOXMAN_Http_IHandler {
 		} else {
 			$outInfo = "N/A";
 		}
-
 
 		$result = array(
 			"MOXMAN_ROOT" => MOXMAN_ROOT,
@@ -72,8 +70,9 @@ class MOXMAN_Handlers_DebugHandler implements MOXMAN_Http_IHandler {
 			"upload_max_filesize" => @ini_get("upload_max_filesize"),
 			"post_max_size" => @ini_get("post_max_size"),
 			"file_uploads" => @ini_get("file_uploads") ? "Yes" : "No",
-			"PHP Version" => phpversion()
-
+			"PHP Version" => phpversion(),
+			"Time" => date('Y-m-d H:i:s', time()),
+			"Time UTC" => date('Y-m-d H:i:s', time() - date("Z"))
 		);
 
 		$out = "<html><body><table border='1'>";
@@ -88,6 +87,7 @@ class MOXMAN_Handlers_DebugHandler implements MOXMAN_Http_IHandler {
 			$out .= "<td>". $name ."&nbsp;</td><td>". $value ."&nbsp;</td>";
 			$out .= "</tr>";
 		}
+
 		$out .= "</table><a href='?action=debug&info=true'>Show phpinfo</a>";
 		$out .= "</body></html>";
 

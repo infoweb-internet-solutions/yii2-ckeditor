@@ -1,8 +1,7 @@
 <?php
 /**
- * DrupalAuthenticator.php
+ * Plugin.php
  *
- * @package MoxieManager.authenicators
  * @author Moxiecode Systems AB
  * @copyright Copyright © 2013, Moxiecode Systems AB, All rights reserved.
  */
@@ -40,9 +39,7 @@ if (!isset($_SESSION['mc_drupal_auth']) || !$_SESSION['mc_drupal_auth']) {
 chdir($cwd);
 
 /**
- * This class handles MoxieManager IPAuthenticator.
- *
- * @package IpAuthenticator
+ * This class handles MoxieManager Drupal authentication.
  */
 class MOXMAN_DrupalAuthenticator_Plugin implements MOXMAN_Auth_IAuthenticator {
 	public function authenticate(MOXMAN_Auth_User $user) {

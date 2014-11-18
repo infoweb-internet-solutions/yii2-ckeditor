@@ -64,7 +64,6 @@ class MOXMAN_Commands_UnZipCommand extends MOXMAN_Commands_BaseCommand {
 			}
 
 			$filter = MOXMAN_Vfs_BasicFileFilter::createFromConfig($config);
-			$fileSystem = $toFile->getFileSystem();
 
 			foreach ($paths as $path) {
 				$isFile = !preg_match('/\/$/', $path);
@@ -73,12 +72,14 @@ class MOXMAN_Commands_UnZipCommand extends MOXMAN_Commands_BaseCommand {
 
 				if ($filter->accept($targetFile, $isFile)) {
 					if ($isFile) {
+						if ($targetFile->exists()) {
+							continue;
+						}
+
 						$content = $zipArchive->getFromName($path);
 
 						// Fire before file action add event
-						$args = new MOXMAN_Vfs_FileActionEventArgs("add", $targetFile);
-						$args->getData()->fileSize = strlen($content);
-						MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
+						$args = $this->fireBeforeFileAction("add", $targetFile, strlen($content));
 						$targetFile = $args->getFile();
 
 						$targetFile = $this->mkdirs($targetFile, true);
@@ -109,8 +110,6 @@ class MOXMAN_Commands_UnZipCommand extends MOXMAN_Commands_BaseCommand {
 
 	/** @ignore */
 	private function mkdirs(MOXMAN_Vfs_IFile $file, $isFile=false) {
-		$parents = array();
-
 		$orgFile = $file;
 
 		if ($isFile) {
@@ -124,7 +123,7 @@ class MOXMAN_Commands_UnZipCommand extends MOXMAN_Commands_BaseCommand {
 		$path = "";
 		$chunkFile = null;
 
-		foreach($pathChunks as $chunk) {
+		foreach ($pathChunks as $chunk) {
 			$path .= "/". $chunk;
 			$chunkFile = MOXMAN::getFile($path);
 
@@ -152,7 +151,10 @@ class MOXMAN_Commands_UnZipCommand extends MOXMAN_Commands_BaseCommand {
 			return $chunkFile;
 		}
 
+		// @codeCoverageIgnoreStart
+		// TODO: This code never executes, might not even be needed
 		return $orgFile;
+		// @codeCoverageIgnoreEnd
 	}
 }
 

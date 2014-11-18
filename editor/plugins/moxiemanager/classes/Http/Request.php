@@ -33,11 +33,50 @@ class MOXMAN_Http_Request {
 	protected $url;
 
 	/**
+	 * Name/value array with all HTTP headers.
+	 *
+	 * @var array
+	 */
+	protected $headers;
+
+	/**
 	 * Constructs a new HTTP Request instance.
 	 */
 	public function __construct() {
 		$this->getParams = $_GET;
 		$this->postParams = $_POST;
+
+		// @codeCoverageIgnoreStart
+		if (function_exists('getallheaders')) {
+			$this->headers = getallheaders();
+		} else {
+			$this->headers = array();
+		}
+		// @codeCoverageIgnoreEnd
+	}
+
+	/**
+	 * Returns the current HTTP method as an uppercase string.
+	 *
+	 * @return String Upper case HTTP Method like GET, POST etc.
+	 */
+	public function getMethod() {
+		return strtoupper($_SERVER['REQUEST_METHOD']);
+	}
+
+	/**
+	 * Returns a specific header by name.
+	 *
+	 * @param String $name Name of header to get.
+	 * @param String $defaultValue Optional default value if the header isn't defined.
+	 * @return String Current header value or default value if it wasn't found.
+	 */
+	public function getHeader($name, $defaultValue = null) {
+		if (isset($this->headers[$name])) {
+			return $this->headers[$name];
+		}
+
+		return $defaultValue;
 	}
 
 	/**

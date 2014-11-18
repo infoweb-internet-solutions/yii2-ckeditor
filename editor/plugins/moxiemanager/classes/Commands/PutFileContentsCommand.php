@@ -36,7 +36,7 @@ class MOXMAN_Commands_PutFileContentsCommand extends MOXMAN_Commands_BaseCommand
 		}
 
 		$filter = MOXMAN_Vfs_CombinedFileFilter::createFromConfig($config, "edit");
-		if (!$filter->accept($file)) {
+		if (!$filter->accept($file, true)) {
 			throw new MOXMAN_Exception(
 				"Invalid file name for: " . $file->getPublicPath(),
 				MOXMAN_Exception::INVALID_FILE_NAME
@@ -44,7 +44,10 @@ class MOXMAN_Commands_PutFileContentsCommand extends MOXMAN_Commands_BaseCommand
 		}
 
 		if ($file->exists()) {
+			$args = $this->fireBeforeFileAction(MOXMAN_Vfs_FileActionEventArgs::DELETE, $file);
+			$file = $args->getFile();
 			$file->delete(true);
+			$this->fireFileAction(MOXMAN_Vfs_FileActionEventArgs::DELETE, $file);
 		}
 
 		$encoding = $config->get("edit.encoding", "utf-8");
@@ -62,6 +65,10 @@ class MOXMAN_Commands_PutFileContentsCommand extends MOXMAN_Commands_BaseCommand
 		if ($encoding != "utf-8") {
 			$content = iconv("utf-8", $encoding, $content);
 		}
+
+		// Fire before file action add event
+		$args = $this->fireBeforeFileAction("add", $file, strlen($content));
+		$file = $args->getFile();
 
 		// Write contents to file
 		$stream = $file->open(MOXMAN_Vfs_IFileStream::WRITE);

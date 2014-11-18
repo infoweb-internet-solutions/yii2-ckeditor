@@ -44,9 +44,11 @@ class MOXMAN_Vfs_FileList implements IteratorAggregate {
 	}
 
 	public function getFiles() {
+		// @codeCoverageIgnoreStart
 		if ($this->isOrdered) {
 			return $this->files;
 		}
+		// @codeCoverageIgnoreEnd
 
 		$orderBy = $this->orderBy;
 		$desc = $this->desc;
@@ -83,7 +85,7 @@ class MOXMAN_Vfs_FileList implements IteratorAggregate {
 			if ($orderBy != "extension") {
 				usort($dirs, array($this, "compareString"));
 
-				if ($this->desc) {
+				if ($desc) {
 					$dirs = array_reverse($dirs);
 				}
 			}
@@ -93,7 +95,7 @@ class MOXMAN_Vfs_FileList implements IteratorAggregate {
 			if ($orderBy != "size") {
 				usort($dirs, array($this, "compareNumbers"));
 
-				if ($this->desc) {
+				if ($desc) {
 					$dirs = array_reverse($dirs);
 				}
 			}
@@ -101,7 +103,7 @@ class MOXMAN_Vfs_FileList implements IteratorAggregate {
 			usort($files, array($this, "compareNumbers"));
 		}
 
-		if ($this->desc) {
+		if ($desc) {
 			$files = array_reverse($files);
 		}
 
@@ -138,6 +140,11 @@ class MOXMAN_Vfs_FileList implements IteratorAggregate {
 
 	// Private comparator functions
 
+	/**
+	 * Compares two numbers for sorting.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+	 */
 	private function compareNumbers($a, $b) {
 		if ($a[1] === $b[1]) {
 			return 0;
@@ -146,6 +153,11 @@ class MOXMAN_Vfs_FileList implements IteratorAggregate {
 		return ($a[1] < $b[1]) ? -1 : 1;
 	}
 
+	/**
+	 * Compares two strings for sorting.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+	 */
 	private function compareString($a, $b) {
 		return strcasecmp($a[1], $b[1]);
 	}

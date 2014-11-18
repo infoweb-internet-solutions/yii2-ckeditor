@@ -82,18 +82,7 @@ class MOXMAN_Commands_CopyToCommand extends MOXMAN_Commands_BaseCommand {
 		$args->getData()->fileSize = $fromFile->getSize();
 		MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
 		$fromFile = $args->getFile();
-		$toFile = $args->getTargetFile();
-
-		// To file exists generate unique name
-		$fileName = $toFile->getName();
-		$ext = MOXMAN_Util_PathUtils::getExtension($fileName);
-		for ($i = 2; $toFile->exists(); $i++) {
-			if ($toFile->isFile() && $ext) {
-				$toFile = MOXMAN::getFile($toFile->getParent(), basename($fileName, '.' . $ext) . '_' . $i . '.' . $ext);
-			} else {
-				$toFile = MOXMAN::getFile($toFile->getParent(), $fileName . '_' . $i);
-			}
-		}
+		$toFile = MOXMAN_Util_FileUtils::uniqueFile($args->getTargetFile());
 
 		$fromFile->copyTo($toFile);
 

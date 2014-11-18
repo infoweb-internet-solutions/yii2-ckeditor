@@ -43,7 +43,7 @@ class MOXMAN_Vfs_CombinedFileFilter implements MOXMAN_Vfs_IFileFilter {
 
 	/**
 	 * Returns true or false if the file is accepted or not by checking accept on all added filters.
-	 * 
+	 *
 	 * @param MOXMAN_Vfs_IFile $file File to grant or deny.
 	 * @param Boolean $isFile Default state if the filter is on an non existing file.
 	 * @return Boolean True/false if the file is accepted or not.
@@ -85,7 +85,6 @@ class MOXMAN_Vfs_CombinedFileFilter implements MOXMAN_Vfs_IFileFilter {
 		$filter2->setIncludeFilePattern($config->get($prefix . '.include_file_pattern'));
 		$filter2->setExcludeFilePattern($config->get($prefix . '.exclude_file_pattern'));
 		$filter2->setIncludeExtensions($config->get($prefix . '.extensions'));
-		$filter2->setExcludeFiles($config->get($prefix . '.local.access_file_name'));
 
 		$filter = new MOXMAN_Vfs_CombinedFileFilter();
 		$filter->addFilter($filter1);

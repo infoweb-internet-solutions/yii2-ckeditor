@@ -38,13 +38,13 @@ class MOXMAN_Commands_ImportFromUrlCommand extends MOXMAN_Commands_BaseCommand {
 
 		if (!$file->canWrite()) {
 			throw new MOXMAN_Exception(
-				"No write access to file: " . $toFile->getPublicPath(),
+				"No write access to file: " . $file->getPublicPath(),
 				MOXMAN_Exception::NO_WRITE_ACCESS
 			);
 		}
 
-		$filter = MOXMAN_Vfs_BasicFileFilter::createFromConfig($config);
-		if (!$filter->accept($file, false)) {
+		$filter = MOXMAN_Vfs_CombinedFileFilter::createFromConfig($config, "upload");
+		if (!$filter->accept($file, true)) {
 			throw new MOXMAN_Exception(
 				"Invalid file name for: " . $file->getPublicPath(),
 				MOXMAN_Exception::INVALID_FILE_NAME
@@ -78,9 +78,7 @@ class MOXMAN_Commands_ImportFromUrlCommand extends MOXMAN_Commands_BaseCommand {
 		$httpClient->close();
 
 		// Fire before file action add event
-		$args = new MOXMAN_Vfs_FileActionEventArgs("add", $file);
-		$args->getData()->fileSize = strlen($content);
-		MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
+		$args = $this->fireBeforeFileAction("add", $file, strlen($content));
 		$file = $args->getFile();
 
 		$stream = $file->open(MOXMAN_Vfs_IFileStream::WRITE);

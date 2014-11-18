@@ -327,7 +327,12 @@ class MOXMAN_Vfs_FileSystemManager {
 					$fileSystem = new $fileSystemClass($scheme, $this->config, $path);
 
 					if ($fileSystem->isCacheable()) {
-						$fileSystem = new MOXMAN_Vfs_Cache_FileSystem($fileSystem);
+						$cacheFileSystem = new MOXMAN_Vfs_Cache_FileSystem($fileSystem);
+
+						// Detect if PDO is supported
+						if ($cacheFileSystem->isDatabaseSupported()) {
+							$fileSystem = $cacheFileSystem;
+						}
 					}
 
 					$this->fileSystems[$i] = $fileSystem;

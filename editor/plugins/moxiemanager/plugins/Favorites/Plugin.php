@@ -43,11 +43,10 @@ class MOXMAN_Favorites_Plugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler 
 				$files = array_slice($files, count($files) - $max);
 			}
 
-			for ($i = count($files) - 1; $i >= 0; $i--) {
-				foreach ($files as $file) {
+			foreach ($files as $file) {
+				for ($i = count($paths) - 1; $i >= 0; $i--) {
 					if ($file->path == $paths[$i]) {
 						array_splice($paths, $i, 1);
-						$i--;
 					}
 				}
 			}
@@ -83,8 +82,8 @@ class MOXMAN_Favorites_Plugin implements MOXMAN_IPlugin, MOXMAN_ICommandHandler 
 			$files = MOXMAN_Util_Json::decode(MOXMAN::getUserStorage()->get("favorites.files", "[]"));
 
 			// Remove existing paths
-			for ($i = count($files) - 1; $i >= 0; $i--) {
-				foreach ($paths as $path) {
+			foreach ($paths as $path) {
+				for ($i = count($files) - 1; $i >= 0; $i--) {
 					if ($files[$i]->path == $path) {
 						array_splice($files, $i, 1);
 						$i--;

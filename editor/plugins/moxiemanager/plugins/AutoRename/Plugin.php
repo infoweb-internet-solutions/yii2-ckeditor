@@ -35,7 +35,7 @@ class MOXMAN_AutoRename_Plugin implements MOXMAN_IPlugin {
 		$autorename = $config->get("autorename.enabled", "");
 		$spacechar = $config->get("autorename.space", "_");
 		$custom = $config->get("autorename.pattern", "/[^0-9a-z\-_]/i");
-		$overwrite = $config->get("upload.overwrite", false);
+		//$overwrite = $config->get("upload.overwrite", false);
 		$lowercase = $config->get("autorename.lowercase", false);
 
 		// @codeCoverageIgnoreStart

@@ -13,15 +13,14 @@ require(__DIR__ . '/../../../../../../common/config/bootstrap.php');
 $moxieManagerConfig['general.license'] = \Yii::getAlias('@moxieManagerKey');
 $moxieManagerConfig['general.hidden_tools'] = '';
 $moxieManagerConfig['general.disabled_tools'] = '';
-$moxieManagerConfig['general.plugins'] = 'Favorites,History,Uploaded';
+$moxieManagerConfig['general.plugins'] = 'AutoFormat,AutoRename,Favorites,History,Uploaded';
 $moxieManagerConfig['general.demo'] = false;
 $moxieManagerConfig['general.debug'] = false;
-$moxieManagerConfig['general.language'] = 'nl';
+$moxieManagerConfig['general.language'] = 'nl_NL';
 $moxieManagerConfig['general.temp_dir'] = '';
 $moxieManagerConfig['general.allow_override'] = 'hidden_tools,disabled_tools';
 
 // Filesystem
-// @todo Update path
 $moxieManagerConfig['filesystem.rootpath'] = \Yii::getAlias('@uploadsBaseUrl');
 $moxieManagerConfig['filesystem.include_directory_pattern'] = '';
 $moxieManagerConfig['filesystem.exclude_directory_pattern'] = '/^mcith$/i';
@@ -30,6 +29,13 @@ $moxieManagerConfig['filesystem.exclude_file_pattern'] = '';
 $moxieManagerConfig['filesystem.extensions'] = 'jpg,jpeg,png,gif,html,htm,txt,docx,doc,zip,pdf';
 $moxieManagerConfig['filesystem.readable'] = true;
 $moxieManagerConfig['filesystem.writable'] = true;
+$moxieManagerConfig['filesystem.directories'] = array(
+    /*
+    "images" => array(
+        "upload.extensions" => "gif,jpg,png"
+    )
+    */
+);
 $moxieManagerConfig['filesystem.allow_override'] = '*';
 
 // Createdir
@@ -58,6 +64,14 @@ $moxieManagerConfig['upload.max_width'] = 800;
 $moxieManagerConfig['upload.max_height'] = 600;
 $moxieManagerConfig['upload.chunk_size'] = '5mb';
 $moxieManagerConfig['upload.allow_override'] = '*';
+
+// Delete
+$moxieManagerConfig['delete.include_file_pattern'] = '';
+$moxieManagerConfig['delete.exclude_file_pattern'] = '';
+$moxieManagerConfig['delete.include_directory_pattern'] = '';
+$moxieManagerConfig['delete.exclude_directory_pattern'] = '';
+$moxieManagerConfig['delete.extensions'] = '*';
+$moxieManagerConfig['delete.allow_override'] = '*';
 
 // Rename
 $moxieManagerConfig['rename.include_file_pattern'] = '';
@@ -144,17 +158,17 @@ $moxieManagerConfig['cache.connection'] = "sqlite:./data/storage/cache.s3db";
 $moxieManagerConfig['storage.engine'] = 'json';
 $moxieManagerConfig['storage.path'] = './data/storage';
 
-// AutoFormat plugin
+// AutoFormat
 $moxieManagerConfig['autoformat.rules'] = '';
 $moxieManagerConfig['autoformat.jpeg_quality'] = 90;
 $moxieManagerConfig['autoformat.delete_format_images'] = true;
 
-// AutoRename, remember to include it in your plugin config.
+// AutoRename
 $moxieManagerConfig['autorename.enabled'] = false;
-$moxieManagerConfig['autorename.spacechar'] = "_";
+$moxieManagerConfig['autorename.space'] = "_";
 $moxieManagerConfig['autorename.lowercase'] = false;
 
-// BasicAuthenticator plugin
+// BasicAuthenticator
 $moxieManagerConfig['basicauthenticator.users'] = array(
     array("username" => "", "password" => "", "groups" => array("administrator"))
 );
@@ -165,33 +179,9 @@ $moxieManagerConfig['googledrive.client_id'] = '';
 // DropBox
 $moxieManagerConfig['dropbox.app_id'] = '';
 
-// Amazon S3 plugin
-$moxieManagerConfig['amazons3.buckets'] = array(
-    'bucketname' => array(
-        'publickey' => '',
-        'secretkey' => ''
-    )
-);
-
-// Azure plugin
-$moxieManagerConfig['azure.containers'] = array(
-);
-
-// Ftp plugin
-$moxieManagerConfig['ftp.accounts'] = array(
-    'ftpname' => array(
-        'host' => '',
-        'user' => '',
-        'password' => '',
-        'rootpath' => '/',
-        'wwwroot' => '/',
-        'passive' => true
-    )
-);
-
-// Favorites plugin
+// Favorites
 $moxieManagerConfig['favorites.max'] = 20;
 
-// History plugin
+// History
 $moxieManagerConfig['history.max'] = 20;
 ?>

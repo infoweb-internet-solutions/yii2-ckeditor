@@ -9,6 +9,7 @@
  * Class to be extended by other core plugin classes. Provides basic functionality shared by all commands.
  *
  * @package MOXMAN_Commands
+ * @SuppressWarnings(PHPMD.NumberOfChildren)
  */
 abstract class MOXMAN_Commands_BaseCommand implements MOXMAN_ICommand {
 	/**
@@ -59,10 +60,12 @@ abstract class MOXMAN_Commands_BaseCommand implements MOXMAN_ICommand {
 	 *
 	 * @param string $action Action name for the file event for example DELETE.
 	 * @param MOXMAN_Vfs_IFile $file File instance to use.
+	 * @param Number $size Size of the file being added.
 	 * @return MOXMAN_Vfs_FileActionEventArgs Returns event argument instance.
 	 */
-	protected function fireBeforeFileAction($action, $file) {
+	protected function fireBeforeFileAction($action, $file, $size = 0) {
 		$args = new MOXMAN_Vfs_FileActionEventArgs($action, $file);
+		$args->getData()->fileSize = $size;
 
 		return MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
 	}
@@ -115,26 +118,22 @@ abstract class MOXMAN_Commands_BaseCommand implements MOXMAN_ICommand {
 	 */
 	protected function getPublicConfig($file = null) {
 		$exposed = array(
-			"general.hidden_tools",
-			"general.disabled_tools",
-
-			"filesystem.extensions",
-			"filesystem.force_directory_template",
-
-			"upload.maxsize",
-			"upload.chunk_size",
-			"upload.extensions",
-
-			"createdoc.templates",
-			"createdoc.fields",
-
-			"createdir.templates"
+			"general.hidden_tools" => "",
+			"general.disabled_tools" => "",
+			"filesystem.extensions" => "*",
+			"filesystem.force_directory_template" => false,
+			"upload.maxsize" => "10mb",
+			"upload.chunk_size" => "2mb",
+			"upload.extensions" => "*",
+			"createdoc.templates" => "",
+			"createdoc.fields" => "",
+			"createdir.templates" => ""
 		);
 
 		$result = array();
 		$config = $file ? $file->getConfig() : MOXMAN::getConfig();
-		foreach ($exposed as $name) {
-			$result[$name] = $config->get($name);
+		foreach ($exposed as $name => $default) {
+			$result[$name] = $config->get($name, $default);
 		}
 
 		return (object) $result;

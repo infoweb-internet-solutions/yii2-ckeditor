@@ -17,7 +17,6 @@ class MOXMAN_Handlers_PluginJsHandler implements MOXMAN_Http_IHandler {
 	 * @param MOXMAN_Http_Context $httpContext Context instance to pass to use for the handler.
 	 */
 	public function processRequest(MOXMAN_Http_Context $httpContext) {
-		$request = $httpContext->getRequest();
 		$response = $httpContext->getResponse();
 
 		$response->setHeader('Content-type', 'text/javascript');

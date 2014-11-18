@@ -31,6 +31,12 @@ class MOXMAN_Commands_ListRootsCommand extends MOXMAN_Commands_BaseCommand {
 				// Add show/hide login to meta
 				$meta["standalone"] = MOXMAN::getAuthManager()->hasStandalone() ? "true" : "false";
 
+				// Add initial path if it's specified in config
+				$initalPath = $filesystem->getConfig()->get("filesystem.inital_path", "");
+				if ($initalPath) {
+					$meta["initial_path"] = $initalPath;
+				}
+
 				// Return name, path and optional meta data
 				$rootPaths[] = (object) array(
 					"name" => $filesystem->getRootName(),

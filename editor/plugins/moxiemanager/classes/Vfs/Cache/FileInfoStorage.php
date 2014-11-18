@@ -51,7 +51,6 @@ class MOXMAN_Vfs_Cache_FileInfoStorage {
 		}
 
 		$parentPath = $this->getIndexPath($files[0]->getParentFile());
-		$path = "";
 		$name = "";
 		$attrs = "";
 		$size = "";
@@ -152,12 +151,21 @@ class MOXMAN_Vfs_Cache_FileInfoStorage {
 	public function putFile(MOXMAN_Vfs_IFile $file) {
 		$pdo = $this->getPdo();
 		if (!$pdo) {
-			return;
+			return null;
 		}
 
 		$parentFile = $file->getParentFile();
 		if (!$parentFile) {
-			return;
+			$info = array(
+				"name" => $file->getFileSystem()->getRootName(),
+				"isDirectory" => true,
+				"canRead" => $file->canRead(),
+				"canWrite" => $file->canWrite(),
+				"size" => 0,
+				"lastModified" => 0
+			);
+
+			return $info;
 		}
 
 		$parentPath = $this->getIndexPath($parentFile);
@@ -166,6 +174,8 @@ class MOXMAN_Vfs_Cache_FileInfoStorage {
 		$attrs .= $file->canRead() ? "r" : "-";
 		$attrs .= $file->canWrite() ? "w" : "-";
 		$attrs .= "-";
+		$size = $file->getSize();
+		$lastModified = $file->getLastModified();
 
 		$numItems = $pdo->i(
 			"SELECT COUNT(mc_id) FROM moxman_cache WHERE mc_path = :mc_path AND mc_name = :mc_name",
@@ -181,8 +191,8 @@ class MOXMAN_Vfs_Cache_FileInfoStorage {
 				"mc_last_modified = :mc_last_modified, mc_cached_time = :mc_cached_time WHERE mc_path = :mc_path AND mc_name = :mc_name",
 				array(
 					"mc_attrs" => $attrs,
-					"mc_size" => $file->isFile() ? $file->getSize() : null,
-					"mc_last_modified" => date('Y-m-d H:i:s', $file->getLastModified()),
+					"mc_size" => $file->isFile() ? $size : null,
+					"mc_last_modified" => date('Y-m-d H:i:s', $lastModified),
 					"mc_cached_time" => date('Y-m-d H:i:s', time()),
 					"mc_path" => $parentPath,
 					"mc_name" => $file->getName()
@@ -199,14 +209,25 @@ class MOXMAN_Vfs_Cache_FileInfoStorage {
 					"mc_name" => $file->getName(),
 					"mc_extension" => pathinfo($file->getName(), PATHINFO_EXTENSION),
 					"mc_attrs" => $attrs,
-					"mc_size" => $file->isFile() ? $file->getSize() : null,
-					"mc_last_modified" => date('Y-m-d H:i:s', $file->getLastModified()),
+					"mc_size" => $file->isFile() ? $size : null,
+					"mc_last_modified" => date('Y-m-d H:i:s', $lastModified),
 					"mc_cached_time" => date('Y-m-d H:i:s', time())
 				)
 			);
 
 			$this->log("[cache] putFile insert");
 		}
+
+		$info = array(
+			"name" => $file->getName(),
+			"isDirectory" => $attrs[0] == 'd',
+			"canRead" => $attrs[1] == 'r',
+			"canWrite" => $attrs[2] == 'w',
+			"size" => $size,
+			"lastModified" => $lastModified
+		);
+
+		return $info;
 	}
 
 	public function listInfoItems(MOXMAN_Vfs_IFile $file, $filterQuery = "") {

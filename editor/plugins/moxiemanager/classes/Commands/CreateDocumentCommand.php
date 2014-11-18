@@ -51,7 +51,7 @@ class MOXMAN_Commands_CreateDocumentCommand extends MOXMAN_Commands_BaseCommand 
 		}
 
 		$filter = MOXMAN_Vfs_CombinedFileFilter::createFromConfig($config, "createdoc");
-		if (!$filter->accept($file)) {
+		if (!$filter->accept($file, true)) {
 			throw new MOXMAN_Exception(
 				"Invalid file name for: " . $file->getPublicPath(),
 				MOXMAN_Exception::INVALID_FILE_NAME
@@ -63,6 +63,7 @@ class MOXMAN_Commands_CreateDocumentCommand extends MOXMAN_Commands_BaseCommand 
 		if ($stream) {
 			$content = $stream->readToEnd();
 			$stream->close();
+
 		}
 
 		// Replace fields
@@ -71,6 +72,9 @@ class MOXMAN_Commands_CreateDocumentCommand extends MOXMAN_Commands_BaseCommand 
 				$content = str_replace('${' . $key . '}', htmlentities($value), $content);
 			}
 		}
+
+		$args = $this->fireBeforeFileAction("add", $file, strlen($content));
+		$file = $args->getFile();
 
 		// Write contents to file
 		$stream = $file->open(MOXMAN_Vfs_IFileStream::WRITE);

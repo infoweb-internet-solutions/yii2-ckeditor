@@ -47,8 +47,8 @@ class MOXMAN_Commands_DeleteCommand extends MOXMAN_Commands_BaseCommand {
 				);
 			}
 
-			$filter = MOXMAN_Vfs_BasicFileFilter::createFromConfig($config);
-			if (!$filter->accept($file, $file->isFile())) {
+			$filter = MOXMAN_Vfs_CombinedFileFilter::createFromConfig($config, "delete");
+			if (!$filter->accept($file)) {
 				throw new MOXMAN_Exception(
 					"Invalid file name for: " . $file->getPublicPath(),
 					MOXMAN_Exception::INVALID_FILE_NAME

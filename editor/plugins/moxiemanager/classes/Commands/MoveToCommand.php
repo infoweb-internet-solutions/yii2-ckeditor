@@ -62,12 +62,10 @@ class MOXMAN_Commands_MoveToCommand extends MOXMAN_Commands_BaseCommand {
 		}
 
 		if ($toFile->exists()) {
-			if (strtolower($fromFile->getPath()) != strtolower($toFile->getPath()) || $fromFile->getName() == $toFile->getName()) {
-				throw new MOXMAN_Exception(
-					"To file already exist: " . $toFile->getPublicPath(),
-					MOXMAN_Exception::FILE_EXISTS
-				);
-			}
+			throw new MOXMAN_Exception(
+				"To file already exist: " . $toFile->getPublicPath(),
+				MOXMAN_Exception::FILE_EXISTS
+			);
 		}
 
 		$fromFileParentFile = $fromFile->getParentFile();

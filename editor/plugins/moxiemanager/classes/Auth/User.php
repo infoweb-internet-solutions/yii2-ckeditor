@@ -21,6 +21,7 @@ class MOXMAN_Auth_User {
 		$this->groups = array();
 		$this->name = "anonymous";
 		$this->password = "";
+		$this->persistent = false;
 	}
 
 	/**

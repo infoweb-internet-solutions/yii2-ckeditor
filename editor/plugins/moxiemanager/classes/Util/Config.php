@@ -12,6 +12,32 @@
  */
 class MOXMAN_Util_Config extends MOXMAN_Util_NameValueCollection {
 	/**
+	 * Constructs a new Config with the specified array as it's internal items.
+	 *
+	 * @param array $items Array with the internal items to set.
+	 */
+	public function __construct(array $items = array()) {
+		// Flatten sub arrays as items
+		foreach ($items as $key => $value) {
+			if (is_array($value)) {
+				$iterator = new RecursiveIteratorIterator(new RecursiveArrayIterator($value));
+
+				foreach ($iterator as $value) {
+					$keys = array($key);
+
+					foreach (range(0, $iterator->getDepth()) as $depth) {
+						$keys[] = $iterator->getSubIterator($depth)->key();
+					}
+
+					$items[join('.', $keys)] = $value;
+				}
+			}
+		}
+
+		$this->items = $items;
+	}
+
+	/**
 	 * Exports the config to the public by checking the allow_export property. This property will tell
 	 * what items is to be expored or now.
 	 *
@@ -84,9 +110,12 @@ class MOXMAN_Util_Config extends MOXMAN_Util_NameValueCollection {
 		if (is_array($pathOverrides) && !empty($pathOverrides)) {
 			if ($file->isFile()) {
 				$file = $file->getParentFile();
+
+				// @codeCoverageIgnoreStart
 				if (!$file) {
 					return $config;
 				}
+				// @codeCoverageIgnoreEnd
 			}
 
 			$path = $file->getPublicPath();
@@ -105,7 +134,7 @@ class MOXMAN_Util_Config extends MOXMAN_Util_NameValueCollection {
 								$config->extend($overrides);
 							}
 						} else {
-							if (strrchr($pattern, '/') === '/') { 
+							if (strrchr($pattern, '/') === '/') {
 								$pattern = substr($pattern, 0, strlen($pattern) - 1);
 							}
 

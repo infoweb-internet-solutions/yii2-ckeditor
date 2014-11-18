@@ -19,7 +19,7 @@ class MOXMAN_Auth_AuthManager {
 	 *
 	 * @param mixed $authenticatorOrder Separated list of authenticators that will be executed.
 	 */
-	public function __construct($authenticatorOrder) {
+	public function __construct($authenticatorOrder = "") {
 		$this->authenticatorOrder = $authenticatorOrder;
 		$this->authenticators = array();
 		$this->user = new MOXMAN_Auth_User();
@@ -100,6 +100,7 @@ class MOXMAN_Auth_AuthManager {
 	 */
 	public function add($name, MOXMAN_Auth_IAuthenticator $authenticator) {
 		$this->authenticators[strtolower($name)] = $authenticator;
+		$this->clearCache();
 	}
 
 	/**
@@ -133,6 +134,7 @@ class MOXMAN_Auth_AuthManager {
 	 */
 	public function remove($name) {
 		unset($this->authenticators[strtolower($name)]);
+		$this->clearCache();
 	}
 
 	/**

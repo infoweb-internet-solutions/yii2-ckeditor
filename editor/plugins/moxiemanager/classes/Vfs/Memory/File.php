@@ -193,6 +193,26 @@ class MOXMAN_Vfs_Memory_File extends MOXMAN_Vfs_BaseFile {
 		$stream->write(file_get_contents($localPath));
 		$stream->close();
 	}
+
+	/**
+	 * Sets the last modified time.
+	 *
+	 * @param long $time last modification date in ms as an long.
+	 */
+	public function setLastModified($time) {
+		if ($this->exists()) {
+			$this->getEntry()->lastModified = $time;
+		}
+	}
+
+	/**
+	 * Returns the URL of the memory file.
+	 *
+	 * @return String Memory file URL.
+	 */
+	public function getUrl() {
+		return MOXMAN_Util_PathUtils::combine("http://memory", $this->getPath());
+	}
 }
 
 ?>

@@ -3,9 +3,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 
 // Figure out where Symfony is installed
-$symfonyRoot = __DIR__;
+$symfonyRoot = MOXMAN_ROOT;
 while ($symfonyRoot) {
-	if (basename($symfonyRoot) == 'web') {
+	if (file_exists($symfonyRoot . '/app')) {
 		break;
 	}
 
@@ -19,8 +19,8 @@ while ($symfonyRoot) {
 
 // Load symfony bootstrap
 if ($symfonyRoot) {
-	$loader = require_once $symfonyRoot . '/../app/bootstrap.php.cache';
-	require_once $symfonyRoot . '/../app/AppKernel.php';
+	$loader = require_once $symfonyRoot . '/app/bootstrap.php.cache';
+	require_once $symfonyRoot . '/app/AppKernel.php';
 } else {
 	die("Could not find symfony root.");
 }
@@ -40,7 +40,7 @@ class MOXMAN_SymfonyAuthenticator_Plugin implements MOXMAN_Auth_IAuthenticator {
 			$kernel->loadClassCache();
 
 			$request = Request::createFromGlobals();
-			$response = $kernel->handle($request);
+			$kernel->handle($request);
 
 			$this->isSessionLoaded = true;
 		}
@@ -73,8 +73,8 @@ class MOXMAN_SymfonyAuthenticator_Plugin implements MOXMAN_Auth_IAuthenticator {
 		// Replace ${user} with all config items
 		$key = $config->get("SessionAuthenticator.user_key", "user");
 		if ($key && isset($session[$key])) {
-			$config->replaceVariable("user", $session->get($key));
-			$user->setName($session->get($key));
+			$config->replaceVariable("user", $session[$key]);
+			$user->setName($session[$key]);
 		}
 
 		return true;

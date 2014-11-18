@@ -10,8 +10,9 @@
 moxman.require([
 	"moxman/PluginManager",
 	"moxman/vfs/FileSystemManager",
-	"moxman/util/JsonRpc"
-], function(PluginManager, FileSystemManager, JsonRpc) {
+	"moxman/util/JsonRpc",
+	"moxman/WidgetFactory"
+], function(PluginManager, FileSystemManager, JsonRpc, WidgetFactory) {
 	PluginManager.add("favorites", function(manager) {
 		function addFavorite() {
 			JsonRpc.exec('favorites.add', {paths: manager.getSelectedFiles().toPathArray()});
@@ -46,11 +47,11 @@ moxman.require([
 			}
 		});
 
-		manager.addMenuItem({
+		WidgetFactory.addMenuItem('filelist.addfavorite', {
 			text: 'Add favorite',
 			icon: 'favorites',
 			onclick: addFavorite,
-			contexts: ['manage.tools']
+			context: 'manage'
 		});
 	});
 });

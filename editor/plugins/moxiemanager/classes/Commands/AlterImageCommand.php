@@ -97,6 +97,7 @@ class MOXMAN_Commands_AlterImageCommand extends MOXMAN_Commands_BaseCommand {
 	private function save($params) {
 		$file = MOXMAN::getFile($params->path);
 		$config = $file->getConfig();
+		$size = 0;
 
 		if ($config->get("general.demo")) {
 			throw new MOXMAN_Exception("This action is restricted in demo mode.", MOXMAN_Exception::DEMO_MODE);
@@ -120,8 +121,12 @@ class MOXMAN_Commands_AlterImageCommand extends MOXMAN_Commands_BaseCommand {
 		// Import temp file as target file
 		if (isset($params->tempname)) {
 			$tempFilePath = MOXMAN_Util_PathUtils::combine(MOXMAN_Util_PathUtils::getTempDir(), $params->tempname);
+			$size = filesize($tempFilePath);
 			$file->importFrom($tempFilePath);
 		}
+
+		$args = $this->fireBeforeFileAction("add", $file, $size);
+		$file = $args->getFile();
 
 		MOXMAN::getFileSystemManager()->removeLocalTempFile($file);
 		$this->fireFileAction(MOXMAN_Vfs_FileActionEventArgs::ADD, $file);

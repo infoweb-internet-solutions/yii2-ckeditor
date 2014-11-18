@@ -26,17 +26,16 @@ class MOXMAN_Commands_ListFilesCommand extends MOXMAN_Commands_BaseCommand {
 		$length = isset($params->length) ? $params->length : null;
 		$orderBy = isset($params->orderBy) ? $params->orderBy : "name";
 		$desc = isset($params->desc) ? $params->desc : false;
-                
+
 		// Result URL to closest file
 		$file = null;
 		if ($url) {
 			try {
 				$file = MOXMAN::getFile($url);
-                                
-                                // WHY?????
-//				if (!MOXMAN_Util_PathUtils::isChildOf($file->getPublicPath(), $rootPath)) {
-//					$file = null;
-//				}
+
+				if ($file && !MOXMAN_Util_PathUtils::isChildOf($file->getPublicPath(), $rootPath)) {
+					$file = null;
+				}
 			} catch (MOXMAN_Exception $e) {
 				// Might throw exception ignore it
 				$file = null;
@@ -203,7 +202,7 @@ class MOXMAN_Commands_ListFilesCommand extends MOXMAN_Commands_BaseCommand {
 			"file" => $this->fileToJson($file, true),
 			"urlFile" => isset($urlFile) ? $this->fileToJson($urlFile, true) : null,
 			"data" => array(),
-			//"url" => str_replace("http://www.flexmail.eu", "https://www.flexmail.eu", $file->getUrl()),
+			"url" => $file->getUrl(),
 			"thumbnailFolder" => $thumbnailFolder,
 			"thumbnailPrefix" => $thumbnailPrefix,
 			"offset" => $files->getOffset(),

@@ -21,6 +21,10 @@ class MOXMAN_Favorites_File extends MOXMAN_Vfs_BaseFile {
 		return $this->entry ? $this->entry->path : "";
 	}
 
+	public function getName() {
+		return $this->entry && isset($this->entry->name) ? $this->entry->name : parent::getName();
+	}
+
 	public function isFile() {
 		return $this->entry ? !$this->entry->isdir : false;
 	}
@@ -49,9 +53,13 @@ class MOXMAN_Favorites_File extends MOXMAN_Vfs_BaseFile {
 		if ($this->isDirectory()) {
 			$fileSystem = $this->getFileSystem();
 			$entries = MOXMAN_Util_Json::decode(MOXMAN::getUserStorage()->get("favorites.files", "[]"));
+			$index = 0;
+
 			foreach ($entries as $entry) {
 				$file = new MOXMAN_Favorites_File($fileSystem, $entry->path, $entry);
+
 				if ($filter->accept($file)) {
+					$entry->name = basename($entry->path) . "_$$[" . ($index++) . "]";
 					$files[] = $file;
 				}
 			}

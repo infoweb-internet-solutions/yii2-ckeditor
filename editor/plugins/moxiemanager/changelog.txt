@@ -1,3 +1,111 @@
+Version 1.4.25 (2014-10-21)
+	Fixed issue with self configured wwwroot containing trailing slash, throwing an exception depending on config.
+	Fixed bug where content type of uploaded files to azure blob storage didn't get the correct mime type.
+	Fixed bug where file names with commas wouldn't be properly downloaded as a zip file.
+Version 1.4.24 (2014-09-29)
+	Added new acl option to Amazon S3 plugin that allows you to set custom acl permissions.
+	Fixed so AmazonS3 updates the acl permissions when renaming/moving files.
+	Fixed compatibility issue with labels not rendering properly when using bootstrap.
+Version 1.4.23 (2014-09-19)
+	Added new unique_url option to allow urls to be padded with a unique cache busting id.
+	Fixed bug where thumbnails wasn't being reloaded properly when you edited images using the edit image tool.
+	Fixed bug where FTP plugin would throw an error when uploading a file in a path recently cleared.
+Version 1.4.22 (2014-09-04)
+	Reworked csrf logic to not use client side cookies but instead verify the token validity.
+Version 1.4.21 (2014-09-03)
+	Added csrf security logic to improve security by validating security tokens.
+	Fixed issue with file systems being cached locally on the frontend and not updated properly.
+Version 1.4.20 (2014-08-27)
+	Fixed issue with files not listing if they had mixed case extensions in Amazon/Azure file systems.
+	Fixed bug where non statically positioned body would place the context menu at an incorrect position.
+	Fixed bug where the menus would be incorrectly positioned on IE 8 if you scrolled the body down.
+Version 1.4.19 (2014-08-26)
+	Fixed compatibility issue with PHP 5.4 where try statement requires catch.
+Version 1.4.18 (2014-08-21)
+	Added JSP authentication file "auth.jsp" to the ExternalAuthenticator plugin.
+	Fixed so generating thumbnails of images with the wrong file extension works properly.
+	Fixed so thumbnails gets properly generated for BMP images even though we doesn't full support it.
+Version 1.4.17 (2014-07-28)
+	Added onopen event callback this gets fired when a action dialog is opened for example when the moxman.browse call is made.
+	Fixed so moxiemanager uses the same language as the one set in tinymce if that language pack doesn't exist it will fallback to English.
+	Fixed so gif image editing is forced server side since browsers can't save gif data.
+	Fixed so thumbnail exif extraction is silent and so it fallbacks to the normal thumbnail logic on failure.
+	Fixed the image resizing logic to it uses hermite resamling on the client side for better results.
+Version 1.4.16 (2014-06-18)
+	Fixed bug where the insert option wasn't working properly if you clicked on the file name in file list.
+Version 1.4.15 (2014-05-15)
+	Fixed bug where contextmenu would automatically close on Firefox running on Mac.
+	Fixed bug where contextmenu wouldn't be constrained to the current window viewport.
+	Fixed so insert is done when clicking on the file name in file lists so it faster to insert single files.
+	Fixed bug where the quota plugin didn't handle copy of directories correctly.
+Version 1.4.14 (2014-04-30)
+    Added event logic to oninsert callback, can now prevent dialog from closing for example.
+	Fixed so the add favorite menu item get properly displayed and can be configure into manage/context menus.
+	Fixed bug where files with the same name in favorites/history/uploaded woudln't work properly.
+Version 1.4.13 (2014-04-24)
+	Added new client side options for enabling/disabling all buttons and menu items.
+	Added option "rename" to "upload.overwrite", files uploaded will get unique names if file exists.
+    Fixed issue with Ftp plugin breaking on symlink files/folders, now ignores symlinks.
+    Fixed bug where right clicking on a folder didn't properly select that specific folder.
+	Fixed bug where thumbnail folder was not deleted if last thumbnail was deleted in it.
+	Fixed so configured uppercase Amazon S3 bucket names produces an error message since they are invalid.
+Version 1.4.12 (2014-04-09)
+	Added new endpoint option to Amazon S3 plugin to configure region or custom domain for API calls.
+	Fixed issue with session_start(), protecting it from already started sessions to avoid errors.
+	Fixed a bug where disabled/hidden tools was not picked up correctly from configuration.
+	Fixed bug where urls wasn't properly produced for files with % characters in the file names.
+	Fixed bug where it wasn't possible to click thumbnails on subdirectories to navigate deeper.
+	Fixed bug where quota plugin would increase the current storage size even if an upload failed.
+Version 1.4.11 (2014-04-02)
+	Added support for skins using the skin option will allow you to load custom skins.
+	Fixed bug where unserialization objects in sessions could produce errors.
+	Fixed bug where GoogleDrive documents did not get the correct file extension.
+	Fixed bug where GoogleDrive file import failed on documents with weird characters.
+Version 1.4.10 (2014-03-24)
+	Fixed so older Safari 5.1 uses Flash/Silverlight as it's uploader runtime since it isn't W3C compatible.
+	Fixed bug where Favorites/History wouldn't list target directories properly.
+	Fixed issue where Azure would list dates on directories even though it's not supported.
+Version 1.4.9 (2014-03-10)
+	Added support for inserting video files using the insertfile button in TinyMCE.
+	Fixed so it doesn't do multiple requests on double clicks when listing directories.
+	Fixed bug where IE 8 would throw exceptions if you specified extensions using client side options.
+	Fixed bug where it wasn't possible to access other file systems when the rootpath was specified on the client.
+	Fixed an issue with the AutoFormat plugin running formats on files that where invalid.
+	Rewrote quota plugin to handle remote file systems correctly and block all types of file updated.
+	Removed the updated file action event since it's basically a delete and add action.
+Version 1.4.8 (2014-02-13)
+	Fixed bug where the external authenticator would produce an incorrect cookie seed.
+	Fixed bug where the basic authentication options for external authenticator didn't work correctly.
+	Fixed bug with encoding of files and folders on Windows systems, added unit tests.
+Version 1.4.7 (2014-02-11)
+	Added filter options for the delete command. This allows you to block delete on specific file or directories.
+	Fixed bug where it was possible to import files from urls that didn't match the filter settings.
+	Fixed bug where it wasn't possible to switch between file systems when the view option was passed in.
+	Fixed bug where it wasn't possible to switch view type if the view option was passed in.
+	Fixed bug where the remember_last_path option would cause issues when enabled while having multiple rootpaths.
+	Fixed bug where Windows-1252 file system encoding wasn't properly handled when listing files.
+	Fixed bug where cookies wasn't properly encoded/decoded in the ExternalAuthenticator plugin.
+Version 1.4.6 (2014-01-29)
+	Fixed bug where empty directories was treated as they didn't exist by the cache layer file system.
+	Fixed bug where url to file resolve logic would fail when having multiple root paths pointing to the same bucket.
+	Fixed so Azure/AmazonS3 config options can be overridden by the SessionAuthenticator using sessions.
+	Fixed so the urlprefix for AmazonS3 doesn't automatically add any bucket. So it needs to be specified correctly.
+Version 1.4.5 (2014-01-22)
+	Added new JoomlaAuthenticator plugin. This enables you to authenticate against the Joomla CMS system.
+	Added insert_filter callback function that lets you override the JSON structure before it gets inserted into forms.
+	Added new cache-control config option for AmazonS3 buckets. This enables you to control the cache-control header for files uploaded.
+	Fixed bug where the AutoFormat plugin wouldn't work on non local file systems such as Amazon S3.
+	Fixed so protocol relative urlprefixes can be used for converting file paths to urls. For example //tinymce.com/myfile.gif.
+Version 1.4.4 (2014-01-08)
+	Added CodeIgniterAuthenticator plugin. Enables you to use authenticate and override config options with sessions.
+	Added basic CKEditor support. It replaces the "browse server" buttons in image/file dialogs.
+	Fixed bug where extensions in directory names would change the icon from a folder to a file type.
+	Fixed so folders without any date returned for them will display a "-" instead for example on S3.
+	Fixed so the AmazonS3 urlprefix option can be used to handle custom domains.
+Version 1.4.3 (2013-12-27)
+	Fixed issue with corrupt exif data, silently fail and generate a proper thumbnail.
+	Fixed bug where the client side configured extensions wasn't properly extended/inherited in upload dialog.
+	Fixed bug where the list files command could fail if an input URL didn't properly resolve to a file path.
 Version 1.4.2 (2013-12-19)
 	Fixed performance issues with the cache layer and huge file lists.
 	Fixed bug where urls resolved wasn't within a specified client side root path.

@@ -14,52 +14,51 @@ class MOXMAN_Media_MediaInfo {
 	/**
 	 * Returns an array with media info.
 	 *
-	 * @param MOXMAN_Vfs_IFile $file File to get the media info for.
+	 * @param String $path Path to file to get the media info for.
 	 * @return Array Name/value array with media info.
 	 */
-	public static function getInfo(MOXMAN_Vfs_IFile $file) {
-		if (!$file->exists()) {
+	public static function getInfo($path) {
+		if (!file_exists($path)) {
 			return null;
 		}
 
-		$ext = strtolower(MOXMAN_Util_PathUtils::getExtension($file->getName()));
+		$ext = strtolower(MOXMAN_Util_PathUtils::getExtension($path));
 
 		switch ($ext) {
 			case "png":
-				return self::getPngInfo($file);
+				return self::getPngInfo($path);
 
 			default:
-				if ($file instanceof MOXMAN_Vfs_Local_File) {
-					$size = @getimagesize($file->getPath());
+				$size = @getimagesize($path);
 
-					if ($size) {
-						return array("width" => $size[0], "height" => $size[1]);
-					}
+				if ($size) {
+					return array("width" => $size[0], "height" => $size[1]);
 				}
 		}
+
+		return null;
 	}
 
 	// @codeCoverageIgnoreStart
 
 	/** @ignore */
-	private static function getPngInfo(MOXMAN_Vfs_IFile $file) {
-		$stream = null;
-		$info = array();
+	private static function getPngInfo($path) {
+		$info = null;
 
-		try {
-			$stream = $file->open(MOXMAN_Vfs_IFileStream::READ);
-			$magic = $stream->read(8);
+		$fp = fopen($path, "rb");
+		if ($fp) {
+			$magic = fread($fp, 8);
 			if ($magic === "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" ) { // Is PNG
 				// Read chunks
 				do {
-					$buff = $stream->read(4);
+					$buff = fread($fp, 4);
 
 					if (strlen($buff) != 4) {
 						break;
 					}
 
 					$chunk = unpack('Nlen', $buff);
-					$chunk['type'] = $stream->read(4);
+					$chunk['type'] = fread($fp, 4);
 
 					if (strlen($chunk['type']) != 4) {
 						break;
@@ -67,12 +66,12 @@ class MOXMAN_Media_MediaInfo {
 
 					// Found header then read it
 					if ($chunk['type'] == 'IHDR') {
-						$header = unpack('Nwidth/Nheight/Cbits/Ctype/Ccompression/Cfilter/Cinterlace', $stream->read(13));
+						$header = unpack('Nwidth/Nheight/Cbits/Ctype/Ccompression/Cfilter/Cinterlace', fread($fp, 13));
 						break;
 					}
 
 					// Jump to next chunk and skip CRC
-					$stream->skip($chunk['len'] + 4);
+					fseek($fp, $chunk['len'] + 4, SEEK_CUR);
 				} while ($buff !== null);
 
 				$info = array(
@@ -82,16 +81,10 @@ class MOXMAN_Media_MediaInfo {
 				);
 			}
 
-			$stream->close();
-
-			return $info;
-		} catch (Exception $e) {
-			if ($stream) {
-				$stream->close();
-			}
-
-			throw $e;
+			fclose($fp);
 		}
+
+		return $info;
 	}
 
 	// @codeCoverageIgnoreEnd

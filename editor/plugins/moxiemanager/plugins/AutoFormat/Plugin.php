@@ -67,8 +67,12 @@ class MOXMAN_AutoFormat_Plugin implements MOXMAN_IPlugin {
 		}
 		// @codeCoverageIgnoreEnd
 
+		// Export to temp file
+		$tempFilePath = MOXMAN::getFileSystemManager()->getLocalTempPath($file);
+		$file->exportTo($tempFilePath);
+
 		$chunks = preg_split('/,/', $format, 0, PREG_SPLIT_NO_EMPTY);
-		$imageInfo = MOXMAN_Media_MediaInfo::getInfo($file);
+		$imageInfo = MOXMAN_Media_MediaInfo::getInfo($tempFilePath);
 		$width = $imageInfo["width"];
 		$height = $imageInfo["height"];
 
@@ -156,8 +160,7 @@ class MOXMAN_AutoFormat_Plugin implements MOXMAN_IPlugin {
 					switch ($action) {
 						case 'resize':
 							$imageAlter = new MOXMAN_Media_ImageAlter();
-							$tempFilePath = MOXMAN::getFileSystemManager()->getLocalTempPath($file);
-							$imageAlter->load($file->exportTo($tempFilePath));
+							$imageAlter->load($tempFilePath);
 							$imageAlter->resize($newWidth, $newHeight);
 
 							$outFileTempPath = MOXMAN::getFileSystemManager()->getLocalTempPath($outFile);
@@ -172,8 +175,7 @@ class MOXMAN_AutoFormat_Plugin implements MOXMAN_IPlugin {
 				}
 			} else {
 				$imageAlter = new MOXMAN_Media_ImageAlter();
-				$tempFilePath = MOXMAN::getFileSystemManager()->getLocalTempPath($file);
-				$imageAlter->load($file->exportTo($tempFilePath));
+				$imageAlter->load($tempFilePath);
 
 				$outFileTempPath = MOXMAN::getFileSystemManager()->getLocalTempPath($outFile);
 				$imageAlter->save($outFileTempPath, $quality);
@@ -192,7 +194,7 @@ class MOXMAN_AutoFormat_Plugin implements MOXMAN_IPlugin {
 	 * @param MOXMAN_Vfs_IFile $file File to generate images for.
 	 */
 	public function removeFormat(MOXMAN_Vfs_IFile $file) {
-		if (!$file->exists()) {
+		if (!$file->exists() || !MOXMAN_Media_ImageAlter::canEdit($file)) {
 			return;
 		}
 
@@ -209,8 +211,12 @@ class MOXMAN_AutoFormat_Plugin implements MOXMAN_IPlugin {
 		}
 		// @codeCoverageIgnoreEnd
 
+		// Export to temp file
+		$tempFilePath = MOXMAN::getFileSystemManager()->getLocalTempPath($file);
+		$file->exportTo($tempFilePath);
+
 		$chunks = preg_split('/,/', $format, 0, PREG_SPLIT_NO_EMPTY);
-		$imageInfo = MOXMAN_Media_MediaInfo::getInfo($file);
+		$imageInfo = MOXMAN_Media_MediaInfo::getInfo($tempFilePath);
 		$width = $imageInfo["width"];
 		$height = $imageInfo["height"];
 

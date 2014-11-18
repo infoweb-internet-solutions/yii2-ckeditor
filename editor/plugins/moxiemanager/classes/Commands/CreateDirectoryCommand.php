@@ -50,11 +50,6 @@ class MOXMAN_Commands_CreateDirectoryCommand extends MOXMAN_Commands_BaseCommand
 			);
 		}
 
-		// Fire event before folder created.
-		$args = new MOXMAN_Vfs_FileActionEventArgs("add", $file);
-		MOXMAN::getPluginManager()->get("core")->fire("BeforeFileAction", $args);
-		$file = $args->getFile();
-
 		if (isset($params->template)) {
 			// TODO: Security audit this
 			$templateFile = MOXMAN::getFile($params->template);
@@ -65,12 +60,16 @@ class MOXMAN_Commands_CreateDirectoryCommand extends MOXMAN_Commands_BaseCommand
 				);
 			}
 
+			$args = $this->fireBeforeTargetFileAction(MOXMAN_Vfs_FileActionEventArgs::COPY, $templateFile, $file);
+			$file = $args->getTargetFile();
 			$templateFile->copyTo($file);
+			$this->fireTargetFileAction(MOXMAN_Vfs_FileActionEventArgs::COPY, $templateFile, $file);
 		} else {
+			$args = $this->fireBeforeFileAction(MOXMAN_Vfs_FileActionEventArgs::ADD, $file);
+			$file = $args->getFile();
 			$file->mkdir();
+			$this->fireFileAction(MOXMAN_Vfs_FileActionEventArgs::ADD, $file);
 		}
-
-		$this->fireFileAction(MOXMAN_Vfs_FileActionEventArgs::ADD, $file);
 
 		return $this->fileToJson($file, true);
 	}

@@ -5,7 +5,9 @@
  * Copyright 2003-2013, Moxiecode Systems AB, All rights reserved.
  */
 
-@session_start();
+if (session_id() == '') {
+	@session_start();
+}
 
 /**
  * This class handles MoxieManager SessionAuthenticator stuff.

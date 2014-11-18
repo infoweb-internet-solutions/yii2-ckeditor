@@ -21,7 +21,7 @@ class MOXMAN_Handlers_DownloadHandler implements MOXMAN_Http_IHandler {
 		$response = $httpContext->getResponse();
 
 		$path = $request->get("path");
-		$names = explode(',', $request->get("names", ""));
+		$names = explode('/', $request->get("names", ""));
 		$zipName = $request->get("zipname", "files.zip");
 
 		if (count($names) === 1) {

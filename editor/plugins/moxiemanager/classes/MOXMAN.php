@@ -6,7 +6,10 @@
  */
 
 @date_default_timezone_set('Europe/Paris');
-@set_time_limit(5 * 60); // 5 minutes execution time
+
+if (!ini_get('safe_mode')) {
+	@set_time_limit(5 * 60); // 5 minutes execution time
+}
 
 if (!defined('MOXMAN_ROOT')) {
 	/**
@@ -43,6 +46,7 @@ if (!isset($moxieManagerConfig)) {
 
 require_once(MOXMAN_CLASSES . '/AutoLoader.php');
 MOXMAN_AutoLoader::register();
+MOXMAN_Exception::registerErrorHandler();
 
 /**
  * MoxieManager factory instance.
@@ -51,10 +55,10 @@ MOXMAN_AutoLoader::register();
  */
 class MOXMAN {
 	/** @ignore */
-	private static $logger, $session, $clientResourceManager, $pdo;
+	private static $logger, $pdo;
 
 	/** @ignore */
-	private static $fileSystemManager, $config, $pluginManager, $authManager, $user, $storageManager;
+	private static $fileSystemManager, $config, $pluginManager, $authManager, $storageManager;
 
 	// @codeCoverageIgnoreStart
 
@@ -253,6 +257,7 @@ class MOXMAN {
 $authenticators = preg_split('/[+|]/', MOXMAN::getConfig()->get("authenticator"));
 foreach ($authenticators as $authenticator) {
 	if ($authenticator) {
+		$authenticator = trim($authenticator);
 		$authenticator = MOXMAN_ROOT . '/plugins/' . $authenticator . "/Plugin.php";
 
 		if (file_exists($authenticator)) {
@@ -265,9 +270,7 @@ foreach ($authenticators as $authenticator) {
 $plugins = explode(',', MOXMAN::getConfig()->get("general.plugins"));
 foreach ($plugins as $plugin) {
 	if ($plugin) {
-		// Get rid of spaces etc.
 		$plugin = trim($plugin);
-
 		$pluginPath = MOXMAN_ROOT . '/plugins/' . $plugin;
 
 		MOXMAN_AutoLoader::addPrefixPath("MOXMAN_" . $plugin, $pluginPath);

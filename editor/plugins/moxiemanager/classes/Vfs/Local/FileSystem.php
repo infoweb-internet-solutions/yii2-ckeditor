@@ -24,8 +24,9 @@ class MOXMAN_Vfs_Local_FileSystem extends MOXMAN_Vfs_FileSystem {
 		// Force the root path to an absolute path
 		$this->rootPath = MOXMAN_Util_PathUtils::toAbsolute(MOXMAN_ROOT, $this->rootPath);
 
-		// Get wwwroot from config or resolve it
-		$wwwroot = $config->get("filesystem.local.wwwroot");
+		// Get wwwroot from config or resolve it, remove trailing slash.
+		$wwwroot = preg_replace('/\\/$/', '', $config->get("filesystem.local.wwwroot"));
+
 		if (!$wwwroot) {
 			$sitePaths = MOXMAN_Util_PathUtils::getSitePaths();
 			$wwwroot = $sitePaths["wwwroot"];
@@ -115,9 +116,9 @@ class MOXMAN_Vfs_Local_FileSystem extends MOXMAN_Vfs_FileSystem {
 				}
 			}
 		} else if (preg_match('/\.(php|inc|php\d+|phtml|php[st])\.[^\/]+/', $path)) {
-//			if ($this->getConfig()->get("filesystem.local.warn_double_exts", true)) {
-//				throw new MOXMAN_Exception("Double extensions is not allowed for security reasons.", MOXMAN_Exception::INVALID_FILE_NAME);
-//			}
+			if ($this->getConfig()->get("filesystem.local.warn_double_exts", true)) {
+				throw new MOXMAN_Exception("Double extensions is not allowed for security reasons.", MOXMAN_Exception::INVALID_FILE_NAME);
+			}
 		}
 	}
 }

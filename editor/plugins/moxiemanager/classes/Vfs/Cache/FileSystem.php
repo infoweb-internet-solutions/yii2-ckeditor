@@ -92,4 +92,8 @@ class MOXMAN_Vfs_Cache_FileSystem extends MOXMAN_Vfs_FileSystem {
 	public function close() {
 		return $this->wrappedFileSystem->close();
 	}
+
+	public function isDatabaseSupported() {
+		return MOXMAN_Vfs_Cache_FileInfoStorage::getInstance()->getPdo() !== null;
+	}
 }

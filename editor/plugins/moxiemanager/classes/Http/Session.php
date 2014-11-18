@@ -11,9 +11,6 @@
  * @package MOXMAN_Http
  */
 class MOXMAN_Http_Session {
-	/** @ignore */
-	private $sessionInitalized;
-
 	/**
 	 * Constructs a new HTTP Session instance.
 	 */

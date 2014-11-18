@@ -53,9 +53,15 @@ class MOXMAN_Commands_ZipCommand extends MOXMAN_Commands_BaseCommand {
 			$this->addZipFiles($fromFile, $fromFile->getParent(), $filter, $zipWriter);
 		}
 
+		$buffer = $zipWriter->toString();
+
+		// Fire before file action add event
+		$args = $this->fireBeforeFileAction("add", $toFile, strlen($buffer));
+		$toFile = $args->getFile();
+
 		$stream = $toFile->open(MOXMAN_Vfs_IFileStream::WRITE);
 		if ($stream) {
-			$stream->write($zipWriter->toString());
+			$stream->write($buffer);
 			$stream->close();
 		}
 

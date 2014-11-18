@@ -278,7 +278,7 @@ define("moxman/util/Loader", [], function() {
 define("moxman/Env", [], function() {
 	return {
 		apiPageName: "api.php",
-		ie7: document.all && !window.opera && !document.documentMode
+		ie7: !("createRange" in document) && "all" in document && !window.opera && !document.documentMode
 	};
 });
 
@@ -381,7 +381,7 @@ define("moxman/util/I18n", [], function() {
  * Copyright 2003-2013, Moxiecode Systems AB, All rights reserved.
  */
 
-/*global moxman:true */
+/*global moxman:true, alert:true */
 
 /**
  * ...
@@ -393,9 +393,93 @@ define("moxman/Loader", [
 ], function(ResourceLoader, Env, I18n) {
 	var exports = this || window;
 
+	// TODO: Remove this when people upgrade from old prototypes
+	if ("toJSON" in Object.prototype) {
+		/*eslint no-alert:0 */
+		alert("MoxieManager detected an old prototype.js version that breaks compatibility.");
+		return;
+	}
+/*
+	function showThrobber() {
+		function render() {
+			var styleElm = document.getElementById('moxman-throbber-style');
+
+			if (throbberState > 0) {
+				return;
+			}
+
+			throbberState = 1;
+
+			if (!styleElm) {
+				styleElm = document.createElement('style');
+				styleElm.id = 'moxman-throbber-style';
+				styleElm.type = 'text/css';
+
+				var head = document.getElementsByTagName('head')[0];
+				if (head.firstChild) {
+					head.insertBefore(styleElm, head.firstChild);
+				} else {
+					head.appendChild(styleElm);
+				}
+
+				styleElm.appendChild(document.createTextNode(
+					'.moxman-throbber {' +
+						'margin: 0; padding: 0; border: 0; outline: 0;' +
+						'vertical-align: top;' +
+						'text-shadow: none; float: none;' +
+						'position: static; width: auto; height: auto;' +
+						'white-space: nowrap; cursor: inherit;' +
+						'line-height: normal; font-weight: normal;' +
+						'text-align: left;' +
+						'-moz-box-sizing: content-box;' +
+						'-webkit-box-sizing: content-box;' +
+						'box-sizing: content-box;' +
+						'direction: ltr;' +
+						'max-width: none;' +
+						'position: absolute;' +
+						'top: 0; left: 0;' +
+						'width: 100%; height: 100%;' +
+						'opacity: 0.6;' +
+						'filter: alpha(opacity=60);' +
+						'background: #fff no-repeat center center;' +
+					'}'
+				));
+
+				var throbberElm = document.createElement('div');
+				throbberElm.id = 'moxman-throbber';
+				throbberElm.className = 'moxman-throbber';
+				document.body.appendChild(throbberElm);
+			}
+		}
+
+		window.setTimeout(render, 500);
+	}
+
+	function hideThrobber() {
+		var elm;
+
+		throbberState = 2;
+
+		elm = document.getElementById('moxman-throbber-style');
+		if (elm) {
+			elm.parentNode.removeChild(elm);
+		}
+
+		elm = document.getElementById('moxman-throbber');
+		if (elm) {
+			elm.parentNode.removeChild(elm);
+		}
+	}
+*/
 	function loadAndRender(view) {
 		return function(settings) {
+			var langCode;
+
 			settings = settings || {};
+
+			//if (settings.throbber !== false) {
+				//showThrobber();
+			//}
 
 			if (!Env.baseUrl) {
 				var scripts = document.getElementsByTagName('script');
@@ -416,24 +500,50 @@ define("moxman/Loader", [
 				moxman.Env.baseUrl = Env.baseUrl;
 				moxman.Env.apiPageUrl = Env.baseUrl + "/" + Env.apiPageName;
 				moxman.util.JsonRpc.url = moxman.Env.apiPageUrl;
+				moxman.util.Csrf.url = moxman.Env.apiPageUrl;
 				moxman.ui.Control.translate = I18n.translate;
 				moxman.ui.FloatPanel.zIndex = settings.zIndex || moxman.ui.FloatPanel.zIndex;
+				moxman.vfs.FileSystemManager.clearFileSystemCache();
+
+				settings.onpostrender = function() {
+					//hideThrobber();
+				};
 
 				var manager = new moxman.Manager(settings);
+
+				/*eslint new-cap:0 */
 				manager.init(new moxman.views[view](manager));
+
+				moxman.Env.modulesLoaded = true;
+
+				if (settings.onopen) {
+					settings.onopen();
+				}
 			}
+
+			langCode = settings.language || Env.language;
 
 			if (!moxman.ui) {
 				ResourceLoader.load({
 					js: [
 						Env.baseUrl + "/js/moxman.api.min.js",
-						Env.apiPageUrl + "?action=language" + (settings.language ? '&code=' + settings.language : ''),
+						Env.apiPageUrl + "?action=language" + (langCode ? '&code=' + langCode : ''),
 						Env.apiPageUrl + "?action=PluginJs"
 					],
 					css: [Env.baseUrl + "/skins/" + (settings.skin || 'lightgray') + "/skin" + (Env.ie7 ? ".ie7" : "") + ".min.css"]
 				}, done);
 			} else {
-				done();
+				if (!moxman.Env.modulesLoaded) {
+					ResourceLoader.load({
+						js: [
+							Env.apiPageUrl + "?action=language" + (langCode ? '&code=' + langCode : ''),
+							Env.apiPageUrl + "?action=PluginJs"
+						],
+						css: [Env.baseUrl + "/skins/" + (settings.skin || 'lightgray') + "/skin" + (Env.ie7 ? ".ie7" : "") + ".min.css"]
+					}, done);
+				} else {
+					done();
+				}
 			}
 		};
 	}
@@ -446,7 +556,8 @@ define("moxman/Loader", [
 		createDir: loadAndRender("CreateDirView"),
 		createDoc: loadAndRender("CreateDocView"),
 		view: loadAndRender("ViewFileView"),
-		rename: loadAndRender("RenameView")
+		rename: loadAndRender("RenameView"),
+		info: loadAndRender("InfoView")
 	};
 
 	// Expose loader methods onto moxman root namespace
@@ -477,11 +588,31 @@ define("moxman/interop/TinyMcePlugin", [
 	"moxman/Loader",
 	"moxman/Env"
 ], function(Loader, Env) {
+	if (!window.tinymce) {
+		return {};
+	}
+
 	tinymce.PluginManager.add('moxiemanager', function(editor, url) {
 		var editorSettings = editor.settings;
 
 		Env.baseUrl = url;
 		Env.apiPageUrl = url + "/" + Env.apiPageName;
+		Env.language = editorSettings.language;
+
+		function convertUrl(url) {
+			return editor.convertURL(url, null, null);
+		}
+
+		function getMime(fileName) {
+			var mimes = {
+				"mp4": "video/mp4",
+				"m4v": "video/mp4",
+				"ogv": "video/ogg",
+				"webm": "video/webm"
+			};
+
+			return mimes[fileName.substr(fileName.lastIndexOf('.') + 1).toLowerCase()];
+		}
 
 		function getBrowseSettings(type) {
 			var browseSettings = {};
@@ -522,7 +653,7 @@ define("moxman/interop/TinyMcePlugin", [
 				oninsert: function(args) {
 					var fieldElm = win.document.getElementById(id);
 
-					fieldElm.value = editor.convertURL(args.focusedFile.meta.url, null, null);
+					fieldElm.value = convertUrl(args.focusedFile.meta.url);
 
 					if ("createEvent" in document) {
 						var evt = document.createEvent("HTMLEvents");
@@ -630,28 +761,54 @@ define("moxman/interop/TinyMcePlugin", [
 					var html = '';
 
 					tinymce.each(args.files, function(file, i) {
-						var isImage = /\.(gif|jpe?g|png)$/i.test(file.name);
-
 						selection.setRng(lastRng);
-
-						// Create link on selection
-						if (!isImage && !selection.isCollapsed()) {
-							editor.execCommand('mceInsertLink', file.meta.url);
-							return false;
-						}
 
 						if (i > 0) {
 							html += ' ';
 						}
 
 						// Create image/file template
-						if (isImage) {
+						if (/\.(gif|jpe?g|png)$/i.test(file.name)) {
 							html += processTemplate(editor.getParam(
 								'moxiemanager_image_template',
 								'<img src="{$meta.url}" ' +
 								'width="{$meta.width}" height="{$meta.height}">'
 							), file);
+						} else if (/\.(mp4|ogv|webm)$/i.test(file.name)) {
+							var videoTemplate = '<video controls>';
+
+							if (file.meta.alt_img) {
+								videoTemplate = '<video controls poster="{$meta.alt_img}">';
+							}
+
+							if (file.meta.url) {
+								file.meta.url = convertUrl(file.meta.url);
+								videoTemplate += '<source src="{$meta.url}" type="' + getMime(file.meta.url) + '" />';
+							}
+
+							if (file.meta.alt_url) {
+								file.meta.alt_url = convertUrl(file.meta.alt_url);
+								videoTemplate += '<source src="{$meta.alt_url}" type="' + getMime(file.meta.alt_url) + '" />';
+							}
+
+							if (file.meta.alt_img) {
+								file.meta.alt_img = convertUrl(file.meta.alt_img);
+								videoTemplate += '<img src="{$meta.alt_img}" />';
+							}
+
+							videoTemplate += '</video>';
+
+							html += processTemplate(editor.getParam(
+								'moxiemanager_video_template',
+								videoTemplate
+							), file);
 						} else {
+							// Create link on selection
+							if (!selection.isCollapsed()) {
+								editor.execCommand('mceInsertLink', file.meta.url);
+								return false;
+							}
+
 							html += processTemplate(editor.getParam('moxiemanager_file_template', '<a href="{$url}">{$name}</a>'), file);
 						}
 					});
@@ -685,5 +842,74 @@ define("moxman/interop/TinyMcePlugin", [
 	}
 });
 
-expose(["moxman/util/Loader","moxman/Env","moxman/util/I18n","moxman/Loader","moxman/interop/TinyMcePlugin"]);
+// Included from: js/moxman/interop/CkEditorPlugin.js
+
+/**
+ * TinyMcePlugin.js
+ *
+ * Copyright 2003-2013, Moxiecode Systems AB, All rights reserved.
+ */
+
+/*global CKEDITOR:true */
+
+/**
+ * ...
+ */
+define("moxman/interop/CkEditorPlugin", [
+	"moxman/Loader",
+	"moxman/Env"
+], function(Loader, Env) {
+	if (!window.CKEDITOR) {
+		return {};
+	}
+
+	CKEDITOR.plugins.add('moxiemanager', {
+		init: function(editor) {
+			// Render the "browse" field in the Image2 plugin
+			editor.config.filebrowserBrowseUrl = "/dummy";
+
+			Env.baseUrl = editor.plugins.moxiemanager.path;
+			Env.apiPageUrl = Env.baseUrl + Env.apiPageName;
+
+			function createBrowseCall(element) {
+				return function() {
+					var target = element.filebrowser.target.split(':');
+					var field = this.getDialog().getContentElement(target[0], target[1]);
+
+					Loader.browse({
+						zIndex: 0xFFFFF,
+						url: field.getValue(),
+						multiple: false,
+						oninsert: function(args) {
+							field.setValue(args.focusedFile.meta.url);
+						}
+					});
+				};
+			}
+
+			function attachMoxieManager(contents) {
+				if (!contents) {
+					return;
+				}
+
+				for (var i = 0; i < contents.length; i++) {
+					var element = contents[i];
+
+					attachMoxieManager(element.children || element.elements);
+
+					if (element.filebrowser && element.filebrowser.action == "Browse") {
+						element.onClick = createBrowseCall(element);
+						element.hidden = false;
+					}
+				}
+			}
+
+			CKEDITOR.on('dialogDefinition', function(evt) {
+				attachMoxieManager(evt.data.definition.contents);
+			});
+		}
+	});
+});
+
+expose(["moxman/util/Loader","moxman/Env","moxman/util/I18n","moxman/Loader","moxman/interop/TinyMcePlugin","moxman/interop/CkEditorPlugin"]);
 })(this);

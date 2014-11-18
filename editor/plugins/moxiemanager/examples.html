@@ -14,7 +14,7 @@ p { margin: 0; padding: 0; margin-bottom: 3px; }
 <form method="post" action="dump.php">
 	<h4>Absolute URL</h4>
 	<p>
-		<input id="url_abs" style="width:400px" />
+		<input type="hidden" id="url_abs" style="width:400px" />
 		<a href="javascript:;" onclick="moxman.browse({fields : 'url_abs'});">[Pick file]</a>
 	</p>
 
@@ -84,8 +84,8 @@ p { margin: 0; padding: 0; margin-bottom: 3px; }
 	<script>
 	tinymce.init({
 		selector:'textarea',
-		plugins: 'link image',
-		toolbar: 'link image insertfile',
+		plugins: 'link image media preview code',
+		toolbar: 'link image media insertfile',
 		external_plugins: { 
 			'moxiemanager': tinymce.documentBaseURL + 'plugin.js'
 		}

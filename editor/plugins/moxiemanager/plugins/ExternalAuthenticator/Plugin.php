@@ -5,7 +5,9 @@
  * Copyright 2003-2013, Moxiecode Systems AB, All rights reserved.
  */
 
-@session_start();
+if (session_id() == '') {
+    @session_start();
+}
 
 /**
  * This class handles MoxieManager SessionAuthenticator stuff.
@@ -40,11 +42,6 @@ class MOXMAN_ExternalAuthenticator_Plugin implements MOXMAN_Auth_IAuthenticator 
 
 		$secretKey = $config->get("ExternalAuthenticator.secret_key");
 		$authUrl = $config->get("ExternalAuthenticator.external_auth_url");
-		$authUser = $config->get("ExternalAuthenticator.basic_auth_user");
-		$authPw = $config->get("ExternalAuthenticator.basic_auth_password");
-		if ($authUser && $authPw) {
-			$request->setAuth($authUser, $authPw);
-		}
 
 		if (!$secretKey || !$authUrl) {
 			throw new MOXMAN_Exception("No key/url set for ExternalAuthenticator, check config.");
@@ -68,12 +65,16 @@ class MOXMAN_ExternalAuthenticator_Plugin implements MOXMAN_Auth_IAuthenticator 
 		$authUrl = MOXMAN_Util_PathUtils::toAbsolute(dirname($_SERVER["REQUEST_URI"]) . '/plugins/ExternalAuthenticator', $authUrl);
 		$request = $httpClient->createRequest($url . $authUrl);
 
-		$cookie = '';
-		foreach ($_COOKIE as $name => $value) {
-			$cookie .= ($cookie ? '; ' : '') . $name . '=' . $value;
+		$authUser = $config->get("ExternalAuthenticator.basic_auth_user");
+		$authPw = $config->get("ExternalAuthenticator.basic_auth_password");
+		if ($authUser && $authPw) {
+			$request->setAuth($authUser, $authPw);
 		}
 
-		$request->setHeader('cookie', $cookie);
+		$cookie = isset($_SERVER["HTTP_COOKIE"]) ? $_SERVER["HTTP_COOKIE"] : "";
+		if ($cookie) {
+			$request->setHeader('cookie', $cookie);
+		}
 
 		$seed = $cookie . uniqid() . time();
 		$hash = hash_hmac('sha256', $seed, $secretKey);
@@ -82,6 +83,10 @@ class MOXMAN_ExternalAuthenticator_Plugin implements MOXMAN_Auth_IAuthenticator 
 			"seed" => $seed,
 			"hash" => $hash
 		));
+
+		if ($response->getCode() < 200 || $response->getCode() > 399) {
+			throw new MOXMAN_Exception("Did not get a proper http status code from Auth url (%s).", $response->getCode());
+		}
 
 		$json = json_decode($response->getBody());
 

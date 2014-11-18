@@ -83,7 +83,7 @@ class MOXMAN_Vfs_Local_FileUrlProvider implements MOXMAN_Vfs_IFileUrlProvider {
 		// Insert path into URL
 		if (stripos($file->getPath(), $wwwroot) === 0) {
 			$url = substr($file->getPath(), strlen($wwwroot));
-			$url = MOXMAN_Util_PathUtils::combine($prefix, $url);
+			$url = MOXMAN_Util_PathUtils::combine($prefix, MOXMAN_Http_Uri::escapeUriString($url));
 
 			// Add suffix to URL
 			if ($suffix) {

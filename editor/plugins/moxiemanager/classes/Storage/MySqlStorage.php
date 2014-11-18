@@ -120,7 +120,6 @@ class MOXMAN_Storage_MySqlStorage implements MOXMAN_Storage_IStorage {
 	 */
 	public function put($name, $value) {
 		$pdo = $this->pdo;
-		$driver = $pdo->getDriverName();
 
 		switch ($this->type) {
 			case self::TYPE_GLOBAL:

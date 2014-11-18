@@ -26,9 +26,8 @@ class MOXMAN_Media_ImageAlter {
 		}
 		// @codeCoverageIgnoreEnd
 
-		switch (MOXMAN_Util_PathUtils::getExtension($path)) {
+		switch ($this->getFileType($path)) {
 			case "jpg":
-			case "jpeg":
 				$this->depth = 24;
 				$this->image = imagecreatefromjpeg($path);
 				break;
@@ -41,11 +40,14 @@ class MOXMAN_Media_ImageAlter {
 				break;
 
 			case "png":
-				// todo: fix me!
-				//$info = MOXMAN_Media_MediaInfo::getInfo($file);
 				$this->depth = 24;
 				$this->image = imagecreatefrompng($path);
 				imagesavealpha($this->image, true);
+				break;
+
+			case "bmp":
+				$this->depth = 24;
+				$this->image = $this->imageCreateFromBmp($path);
 				break;
 		}
 	}
@@ -69,6 +71,10 @@ class MOXMAN_Media_ImageAlter {
 
 			case "png":
 				$result = imagepng($this->image, $path);
+				break;
+
+			case "bmp":
+				$result = $this->imagebmp($this->image, $path);
 				break;
 		}
 
@@ -94,8 +100,16 @@ class MOXMAN_Media_ImageAlter {
 		// Load image into RAM then create it from that
 		// TODO: Replace this once PHP get proper buffers for GD
 		$stream = $file->open(MOXMAN_Vfs_IFileStream::READ);
-		$this->image = imagecreatefromstring($stream->readToEnd());
+		$data = $stream->readToEnd();
 		$stream->close();
+
+		// Check if file is BMP
+		if ($data[0] == 'B' && $data[1] == 'M') {
+			$this->image = $this->imageCreateFromBmp("data://image/bmp;base64," . base64_encode($data));
+			$this->depth = 24;
+		} else {
+			$this->image = imagecreatefromstring($data);
+		}
 
 		switch (MOXMAN_Util_PathUtils::getExtension($file->getName())) {
 			case "jpg":
@@ -110,8 +124,6 @@ class MOXMAN_Media_ImageAlter {
 				break;
 
 			case "png":
-				// todo: fix me!
-				//$info = MOXMAN_Media_MediaInfo::getInfo($file);
 				$this->depth = 24;
 				imagesavealpha($this->image, true);
 				break;
@@ -158,6 +170,10 @@ class MOXMAN_Media_ImageAlter {
 
 			case "png":
 				$result = imagepng($this->image);
+				break;
+
+			case "bmp":
+				$result = $this->imagebmp($this->image);
 				break;
 		}
 
@@ -363,7 +379,7 @@ class MOXMAN_Media_ImageAlter {
 	public static function canEdit(MOXMAN_Vfs_IFile $file) {
 		$ext = MOXMAN_Util_PathUtils::getExtension($file->getName());
 
-		return preg_match('/gif|jpe?g|png/', $ext) === 1;
+		return preg_match('/gif|jpe?g|png|bmp/', $ext) === 1;
 	}
 
 	/** @ignore */
@@ -392,6 +408,194 @@ class MOXMAN_Media_ImageAlter {
 		imagesavealpha($image, true);
 
 		return $image;
+	}
+
+	private function getFileType($path) {
+		$info = getimagesize($path);
+
+		if ($info[2] === IMAGETYPE_GIF) {
+			return "gif";
+		}
+
+		if ($info[2] === IMAGETYPE_JPEG || $info[2] === IMAGETYPE_JPEG2000) {
+			return "jpg";
+		}
+
+		if ($info[2] === IMAGETYPE_PNG) {
+			return "png";
+		}
+
+		if ($info[2] === IMAGETYPE_BMP) {
+			return "bmp";
+		}
+
+		return "jpg";
+	}
+
+	private function imageCreateFromBmp($path) {
+		$fp = fopen($path, "rb");
+		if (!$fp) {
+			return false;
+		}
+
+		// Bitmap File Header
+		$header = unpack("vfile_type/Vfile_size/Vreserved/Vbitmap_offset", fread($fp, 14));
+
+		// Verify magic number
+		if ($header['file_type'] != 19778) {
+			fclose($fp);
+			return false;
+		}
+
+		// DIB Header
+		$dib = unpack(
+			'Vheader_size/Vwidth/Vheight/vplanes/vbits_per_pixel'.
+			'/Vcompression/Vsize_bitmap/Vhoriz_resolution'.
+			'/Vvert_resolution/Vcolors_used/Vcolors_important',
+			fread($fp, 40)
+		);
+
+		$dib['colors'] = pow(2, $dib['bits_per_pixel']);
+		if ($dib['size_bitmap'] == 0) {
+			$dib['size_bitmap'] = $header['file_size'] - $header['bitmap_offset'];
+		}
+
+		$dib['bytes_per_pixel'] = $dib['bits_per_pixel'] / 8;
+		$dib['bytes_per_pixel2'] = ceil($dib['bytes_per_pixel']);
+		$dib['decal'] = ($dib['width'] * $dib['bytes_per_pixel'] / 4);
+		$dib['decal'] -= floor($dib['width'] * $dib['bytes_per_pixel'] / 4);
+		$dib['decal'] = 4 - (4 * $dib['decal']);
+
+		if ($dib['decal'] == 4) {
+			$dib['decal'] = 0;
+		}
+
+		$palette = array();
+		if ($dib['colors'] < 16777216) {
+			$palette = unpack('V' . $dib['colors'], fread($fp, $dib['colors'] * 4));
+		}
+
+		$img = fread($fp, $dib['size_bitmap']);
+		$vide = chr(0);
+
+		$res = imagecreatetruecolor($dib['width'], $dib['height']);
+		$p = 0;
+		$y = $dib['height'] - 1;
+
+		while ($y >= 0) {
+			$x = 0;
+
+			while ($x < $dib['width']) {
+				if ($dib['bits_per_pixel'] == 24) {
+					$color = unpack("V", substr($img, $p, 3) . $vide);
+				} else if ($dib['bits_per_pixel'] == 16) {
+					$color = unpack("n", substr($img, $p, 2));
+					$color[1] = $palette[$color[1] + 1];
+				} else if ($dib['bits_per_pixel'] == 8) {
+					$color = unpack("n", $vide . substr($img, $p, 1));
+					$color[1] = $palette[$color[1] + 1];
+				} else if ($dib['bits_per_pixel'] == 4) {
+					$color = unpack("n", $vide . substr($img, floor($p), 1));
+
+					if (($p * 2) % 2 == 0) {
+						$color[1] = ($color[1] >> 4);
+					} else {
+						$color[1] = ($color[1] & 0x0F);
+					}
+
+					$color[1] = $palette[$color[1] + 1];
+				} else if ($dib['bits_per_pixel'] == 1) {
+					$color = unpack("n", $vide . substr($img, floor($p), 1));
+
+					if (($p * 8) % 8 == 0) {
+						$color[1] = $color[1] >> 7;
+					} else if (($p * 8) % 8 == 1) {
+						$color[1] = ($color[1] & 0x40) >> 6;
+					} else if (($p * 8) % 8 == 2) {
+						$color[1] = ($color[1] & 0x20) >> 5;
+					} else if (($p * 8) % 8 == 3) {
+						$color[1] = ($color[1] & 0x10) >> 4;
+					} else if (($p * 8) % 8 == 4) {
+						$color[1] = ($color[1] & 0x8) >> 3;
+					} else if (($p * 8) % 8 == 5) {
+						$color[1] = ($color[1] & 0x4) >> 2;
+					} else if (($p * 8) % 8 == 6) {
+						$color[1] = ($color[1] & 0x2) >> 1;
+					} else if (($p * 8) % 8 == 7) {
+						$color[1] = ($color[1] & 0x1);
+					}
+
+					$color[1] = $palette[$color[1] + 1];
+				} else {
+					fclose($fp);
+					return false;
+				}
+
+				imagesetpixel($res, $x, $y, $color[1]);
+				$x++;
+				$p += $dib['bytes_per_pixel'];
+			}
+
+			$y--;
+			$p += $dib['decal'];
+		}
+
+		fclose($fp);
+		return $res;
+	}
+
+	private function imagebmp($img, $filename = false) {
+		$wid = imagesx($img);
+		$hei = imagesy($img);
+		$pad = str_pad('', $wid % 4, "\0");
+		$size = 54 + ($wid + $pad) * $hei;
+
+		$header['identifier'] = 'BM';
+		$header['file_size'] = pack('V', $size);
+		$header['reserved'] = pack('V', 0);
+		$header['bitmap_data'] = pack('V', 54);
+		$header['header_size'] = pack('V', 40);
+		$header['width'] = pack('V', $wid);
+		$header['height'] = pack('V', $hei);
+		$header['planes'] = pack('v', 1);
+		$header['bits_per_pixel'] = pack('v', 24);
+		$header['compression'] = pack('V', 0);
+		$header['data_size'] = pack('V', 0);
+		$header['h_resolution'] = pack('V', 0);
+		$header['v_resolution'] = pack('V', 0);
+		$header['colors'] = pack('V', 0);
+		$header['important_colors'] = pack('V', 0);
+
+		if (!$filename) {
+			$filename = "php://temp";
+		}
+
+		$fp = fopen($filename, "wb");
+		if (!$fp) {
+			return false;
+		}
+
+		foreach ($header as $h) {
+			fwrite($fp, $h);
+		}
+
+		for ($y = $hei - 1; $y >= 0; $y--) {
+			for ($x = 0; $x < $wid; $x++) {
+				$rgb = imagecolorat($img, $x, $y);
+				$rgb = chr($rgb & 255) . chr(($rgb >> 8) & 255) . chr(($rgb >> 16) & 255);
+
+				fwrite($fp, $rgb);
+			}
+
+			fwrite($fp, $pad);
+		}
+
+		if ($filename == "php://temp") {
+			rewind($fp);
+			echo fpassthru($fp);
+		}
+
+		fclose($fp);
 	}
 }
 

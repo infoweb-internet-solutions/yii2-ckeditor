@@ -10,14 +10,11 @@
  * @codeCoverageIgnore
  */
 class MOXMAN_Auth_Oauth2 {
-
-	private $type, $response_type;
-	private $client_secret, $client_id;
+	private $responseType;
+	private $clientSecret, $clientId;
 	private $action, $scope, $state;
-	private $token, $refresh_token;
-	private $id_token, $expires_in;
-
-	private $parameters, $requestClient;
+	private $token, $refreshToken;
+	private $idToken, $requestClient;
 
 	/**
 	 * Constructs a new Oauth2 instance.
@@ -37,14 +34,14 @@ class MOXMAN_Auth_Oauth2 {
 	 */
 	public function __construct($config) {
 		$this->scope = $config["scope"];
-		$this->client_secret = $config["client_secret"];
-		$this->client_id = $config["client_id"];
+		$this->clientSecret = $config["client_secret"];
+		$this->clientId = $config["client_id"];
 		$this->action = "GET";
 		$this->callback = $config["callback"];
 		$this->state = $config["state"];
-		$this->response_type = $config["response_type"];
-		$this->auth_url = $config["auth_url"];
-		$this->token_url = $config["token_url"];
+		$this->responseType = $config["response_type"];
+		$this->authUrl = $config["auth_url"];
+		$this->tokenUrl = $config["token_url"];
 	}
 
 	/**
@@ -62,15 +59,15 @@ class MOXMAN_Auth_Oauth2 {
 
 		$parameters = array();
 		$parameters["type"] = "web_server";
-		$parameters["client_id"] = $this->client_id;
+		$parameters["client_id"] = $this->clientId;
 		$parameters["redirect_uri"] = $this->callback;
-		$parameters["response_type"] = $this->response_type;
+		$parameters["response_type"] = $this->responseType;
 
 		if ($this->scope) {
 			$parameters['scope'] = $this->scope;
 		}
 
-		return $this->auth_url . "?access_type=offline&state=". $this->state ."&" . $approval . http_build_query($parameters);
+		return $this->authUrl . "?access_type=offline&state=". $this->state ."&" . $approval . http_build_query($parameters);
 		//header("Location: ". $this->auth_url . "?access_type=offline&state=". $this->state ."&" . $approval . http_build_query($parameters));
 	}
 
@@ -79,13 +76,13 @@ class MOXMAN_Auth_Oauth2 {
 	 *
 	 */
 	public function refresh() {
-		$urlParts = parse_url($this->token_url);
+		$urlParts = parse_url($this->tokenUrl);
 		$path = $urlParts["path"];
 		$params = array();
-		$params["client_id"] = $this->client_secret;
-		$params["client_secret"] = $this->client_id;
+		$params["client_id"] = $this->clientSecret;
+		$params["client_secret"] = $this->clientId;
 		$params["grant_type"] = "refresh_token";
-		$params["refresh_token"] = $this->refresh_token;
+		$params["refresh_token"] = $this->refreshToken;
 
 		$client = new MOXMAN_Http_HttpClient($urlParts["scheme"] ."://". $urlParts["host"]);
 		$client->setLogLevel(0);
@@ -102,14 +99,14 @@ class MOXMAN_Auth_Oauth2 {
 	 */
 	public function validate($token) {
 		$this->token = $token;
-		$urlParts = parse_url($this->token_url);
+		$urlParts = parse_url($this->tokenUrl);
 		$path = $urlParts["path"];
 
 		$parameters = array();
 		$parameters["grant_type"] = "authorization_code";
 		$parameters["code"] = $token;
-		$parameters["client_id"] = $this->client_id;
-		$parameters["client_secret"] = $this->client_secret;
+		$parameters["client_id"] = $this->clientId;
+		$parameters["client_secret"] = $this->clientSecret;
 		$parameters["redirect_uri"] = $this->callback;
 
 		$client = new MOXMAN_Http_HttpClient($urlParts["scheme"] ."://". $urlParts["host"]);
@@ -122,10 +119,10 @@ class MOXMAN_Auth_Oauth2 {
 		$client->close();
 		$data = json_decode($body);
 
-		$this->refresh_token = $data->refresh_token;
-		$this->token = $data->access_token;
-		$this->expires = $data->expires_in;
-		$this->id_token = $data->id_token;
+		$this->refreshToken = $data->refreshToken;
+		$this->token = $data->accessToken;
+		$this->expires = $data->expiresIn;
+		$this->idToken = $data->idToken;
 
 		return $data;
 	}

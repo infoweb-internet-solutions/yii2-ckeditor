@@ -1,30 +1,38 @@
 <?php
-Header("Content-type: application/json; charset=utf-8");
+	if (session_id() == '') {
+		@session_start();
+	}
 
-$secretKey = "";
+	header("Content-type: application/json; charset=utf-8");
 
-if (!$secretKey) {
-	die('{"error" : {"message" : "No secret key set.", "code" : 130}}');
-}
+	$secretKey = ""; // Change this key to match the one in config
 
-if (!isset($_REQUEST["hash"]) || !isset($_REQUEST["seed"])) {
-	die('{"error" : {"message" : "Error in input.", "code" : 120}}');
-}
+	if (!$secretKey) {
+		die('{"error" : {"message" : "No secret key set.", "code" : 130}}');
+	}
 
-// Check authentication with your CMS
-if (!isset($_SESSION["isLoggedIn"]) || !$_SESSION["isLoggedIn"]) {
-	die('{"error" : {"message" : "Not authenticated.", "code" : 180}}');
-}
+	if (!isset($_REQUEST["hash"]) || !isset($_REQUEST["seed"])) {
+		die('{"error" : {"message" : "Error in input.", "code" : 120}}');
+	}
 
-$hash = $_REQUEST["hash"];
-$seed = $_REQUEST["seed"];
+	// Check authentication with your CMS
+	if (!isset($_SESSION["isLoggedIn"]) || !$_SESSION["isLoggedIn"]) {
+		die('{"error" : {"message" : "Not authenticated.", "code" : 180}}');
+	}
 
-$localHash = hash_hmac('sha256', $seed, $secretKey);
+	$hash = $_REQUEST["hash"];
+	$seed = $_REQUEST["seed"];
 
-if ($hash == $localHash) {
-	// Hard code some rootpath, get something from sessions etc.
-	die('{"result" : {"filesystem.rootpath" : "C:/Inetpub/wwwroot/test"}}');
-} else {
-	die('{"error" : {"message" : "Error in input.", "code" : 120}}');
-}
+	$localHash = hash_hmac('sha256', $seed, $secretKey);
+
+	if ($hash == $localHash) {
+		die(json_encode(array(
+			"result" => array(
+				// Override config options here
+				//"filesystem.rootpath" => "/var/www"
+			)
+		)));
+	} else {
+		die('{"error" : {"message" : "Error in input.", "code" : 120}}');
+	}
 ?>

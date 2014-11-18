@@ -6,6 +6,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <script src="js/moxman.loader.min.js"></script>
 </head>
-<body onload="moxman.browse({fullscreen: true, insert: false});">
+<body onload="moxman.browse({fullscreen: true, insert: false, close: false});">
 </body>
 </html>

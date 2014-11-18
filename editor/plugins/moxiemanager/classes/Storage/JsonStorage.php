@@ -93,9 +93,11 @@ class MOXMAN_Storage_JsonStorage implements MOXMAN_Storage_IStorage {
 
 	/** @ignore */
 	private function save() {
+		// @codeCoverageIgnoreStart
 		if (!is_writable(dirname($this->storagePath))) {
 			return $this;
 		}
+		// @codeCoverageIgnoreEnd
 
 		$json = MOXMAN_Util_Json::encode($this->data, $this->config->get("general.debug"));
 

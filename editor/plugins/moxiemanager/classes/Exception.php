@@ -79,10 +79,18 @@ class MOXMAN_Exception extends Exception {
 
 		throw $exception;
 	}
-}
 
-// Treat everything as errors
-@error_reporting(E_ALL);
-set_error_handler(array("MOXMAN_Exception", "throwRuntimeError"));
+	// @codeCoverageIgnoreStart
+
+	/**
+	 * Registers the error handler and treat everything as errors.
+	 */
+	public static function registerErrorHandler() {
+		@error_reporting(E_ALL);
+		set_error_handler(array("MOXMAN_Exception", "throwRuntimeError"));
+	}
+
+	// @codeCoverageIgnoreEnd
+}
 
 ?>

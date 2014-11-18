@@ -38,7 +38,9 @@ class MOXMAN_Http_Response {
 	 * @param Boolean $replace True/false state if the value should replace the default header.
 	 */
 	public function setHeader($name, $value, $replace = true) {
-		header($name . ": " . $value, $replace);
+		if (!defined('PHPUNIT')) {
+			header($name . ": " . $value, $replace);
+		}
 	}
 
 	/**
@@ -65,7 +67,18 @@ class MOXMAN_Http_Response {
 	 * @param Mixed $obj Json data to send.
 	 */
 	public function sendJson($obj) {
-		$this->sendContent(MOXMAN_Util_Json::encode($obj));
+		$this->setHeader('Content-Type', 'application/json');
+
+		$obj = MOXMAN_Util_Json::encode($obj);
+
+		// IE 7 treats application/json download but in case some proxy/server
+		// would ignore that content-type and deliver it as HTML trim a few things
+		$obj = strtr($obj, array(
+			'<' => '\u003c',
+			'>' => '\u003e'
+		));
+
+		$this->sendContent($obj);
 	}
 
 	/**
@@ -73,6 +86,7 @@ class MOXMAN_Http_Response {
 	 *
 	 * @param string $url Url to redirect to.
 	 * @param Array $args Query string arguments to pass to page.
+	 * @SuppressWarnings(PHPMD.ExitExpression)
 	 */
 	public function redirect($url, $args = false) {
 		$this->disableCache();

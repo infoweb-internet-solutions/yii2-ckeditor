@@ -328,7 +328,7 @@ class MOXMAN_Http_HttpClientRequest {
 
 	/**
 	 * Sets http basic auth authentication data
-	 * 
+	 *
 	 * @param string $user
 	 * @param string $password
 	 */
@@ -364,14 +364,18 @@ class MOXMAN_Http_HttpClientRequest {
 			$this->url["query"] = http_build_query($query);
 		}
 
+		// @codeCoverageIgnoreStart
 		if (function_exists('fsockopen')) {
 			return $this->sendSocket($data);
 		} else if (function_exists('curl_init')) {
 			return $this->sendCurl($data);
 		} else {
-			throw new MOXMAN_Http_HttpClientResponse("Could not make HTTP request: No curl, no sockets in PHP.");
+			throw new MOXMAN_Http_HttpClientException("Could not make HTTP request: No curl, no sockets in PHP.");
 		}
+		// @codeCoverageIgnoreEnd
 	}
+
+	// @codeCoverageIgnoreStart
 
 	private function sendCurl($data) {
 		$this->curlContentLength = 0;
@@ -476,6 +480,12 @@ class MOXMAN_Http_HttpClientRequest {
 		return new MOXMAN_Http_HttpClientResponse($this->client, $this, $this->curlContentLength);
 	}
 
+	/**
+	 * Called by curl when a header is parsed in HTTP socket stream.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+	 */
 	private function curlCallbackWriteHeader($ch, $string) {
 		// Auth and continue requests will produce multiple header chunks
 		if (preg_match('!^(?:HTTP/(\d\.\d)) (\d{3})(?: (.+))?!', $string, $matches)) {
@@ -492,6 +502,12 @@ class MOXMAN_Http_HttpClientRequest {
 		return strlen($string);
 	}
 
+	/**
+	 * Called by curl when a body is parsed in HTTP socket stream.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+	 */
 	private function curlCallbackWriteBody($ch, $string) {
 		$len = strlen($string);
 
@@ -502,6 +518,8 @@ class MOXMAN_Http_HttpClientRequest {
 
 		return $len;
 	}
+
+	// @codeCoverageIgnoreEnd
 
 	private function sendSocket($data) {
 		$multipartChunks = null;
@@ -549,7 +567,8 @@ class MOXMAN_Http_HttpClientRequest {
 		foreach ($this->headers as $key => $value) {
 			// If header has multiple values
 			if (is_array($value)) {
-				foreach ($value as $key2 => $value2) {
+				$values = array_values($value);
+				foreach ($values as $value2) {
 					if (strlen($value2)) {
 						$this->writeLine($key . ": " . $value2);
 					}
@@ -1136,7 +1155,8 @@ class MOXMAN_Http_HttpClientFormData {
 	 * @return boolean true/false if this instance has file data or not.
 	 */
 	public function hasFileData() {
-		foreach ($this->items as $key => $value) {
+		$values = array_values($this->items);
+		foreach ($values as $value) {
 			if (is_array($value)) {
 				return true;
 			}

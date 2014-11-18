@@ -11,13 +11,13 @@
  * @package MOXMAN_Vfs_Cache
  */
 class MOXMAN_Vfs_Cache_File implements MOXMAN_Vfs_IFile {
-	private $fileSystem, $wrappedFile, $info;
+	private $fileSystem, $wrappedFile, $info, $config;
 
 	public function __construct(MOXMAN_Vfs_FileSystem $fileSystem, MOXMAN_Vfs_IFile $file, $info = null) {
 		$this->fileSystem = $fileSystem;
 		$this->wrappedFile = $file;
 		$this->fileInfoStorage = MOXMAN_Vfs_Cache_FileInfoStorage::getInstance();
-		$this->info = $info ? $info : $this->fileInfoStorage->getInfo($file);
+		$this->info = $info;
 	}
 
 	public function getFileSystem() {
@@ -58,27 +58,29 @@ class MOXMAN_Vfs_Cache_File implements MOXMAN_Vfs_IFile {
 	}
 
 	public function exists() {
-		if ($this->info) {
-			return true;
+		$size = $this->getStatItem("size", -1);
+
+		// Can still exist since it might be an non cached empty dir
+		if ($size === -1) {
+			return $this->wrappedFile->exists();
 		}
 
-		return $this->wrappedFile->exists();
+		return true;
 	}
 
 	public function isDirectory() {
-		if ($this->info) {
-			return $this->info["isDirectory"];
+		$isDirectory = $this->getStatItem("isDirectory", null);
+
+		// Can still exist since it might be an non cached empty dir
+		if ($isDirectory === null) {
+			return $this->wrappedFile->isDirectory();
 		}
 
-		return $this->wrappedFile->isDirectory();
+		return $isDirectory;
 	}
 
 	public function isFile() {
-		if ($this->info) {
-			return !$this->info["isDirectory"];
-		}
-
-		return $this->wrappedFile->isFile();
+		return !$this->isDirectory();
 	}
 
 	public function isHidden() {
@@ -86,35 +88,19 @@ class MOXMAN_Vfs_Cache_File implements MOXMAN_Vfs_IFile {
 	}
 
 	public function getLastModified() {
-		if ($this->info) {
-			return $this->info["lastModified"];
-		}
-
-		return $this->wrappedFile->getLastModified();
+		return $this->getStatItem("lastModified", 0);
 	}
 
 	public function canRead() {
-		if ($this->info) {
-			return $this->info["canRead"];
-		}
-
-		return $this->wrappedFile->canRead();
+		return $this->getStatItem("canRead", true);
 	}
 
 	public function canWrite() {
-		if ($this->info) {
-			return $this->info["canWrite"];
-		}
-
-		return $this->wrappedFile->canWrite();
+		return $this->getStatItem("canWrite", true);
 	}
 
 	public function getSize() {
-		if ($this->info) {
-			return $this->info["size"];
-		}
-
-		return $this->wrappedFile->getSize();
+		return $this->getStatItem("size", 0);
 	}
 
 	public function moveTo(MOXMAN_Vfs_IFile $dest) {
@@ -168,7 +154,21 @@ class MOXMAN_Vfs_Cache_File implements MOXMAN_Vfs_IFile {
 	}
 
 	public function getConfig() {
-		return $this->wrappedFile->getConfig();
+		// Use cached config
+		if ($this->config) {
+			return $this->config;
+		}
+
+		// Get config from file system config provider
+		$configProvider = $this->wrappedFile->getFileSystem()->getFileConfigProvider();
+		if ($configProvider) {
+			// Get the config for the file and cache it
+			$this->config = $configProvider->getConfig($this);
+			return $this->config;
+		}
+
+		// Config provider not found then pass out the config we have for the file system
+		return $this->fileSystem->getConfig()->getFileConfig($this);
 	}
 
 	public function getMetaData() {
@@ -181,6 +181,33 @@ class MOXMAN_Vfs_Cache_File implements MOXMAN_Vfs_IFile {
 
 	public function getFileInfoStorage() {
 		return $this->fileInfoStorage;
+	}
+
+	private function getStat() {
+		if ($this->info) {
+			return $this->info;
+		}
+
+		$this->info = $this->fileInfoStorage->getInfo($this->wrappedFile);
+
+		if (!$this->info && $this->wrappedFile->exists()) {
+			$this->info = $this->fileInfoStorage->putFile($this->wrappedFile);
+		}
+
+		return $this->info;
+	}
+
+	/**
+	 * Returns a stat item or the default value if it wasn't found.
+	 *
+	 * @param String $key Key of stat item to get.
+	 * @param mixed $default Default value to return.
+	 * @return mixed Value of stat item or default.
+	 */
+	private function getStatItem($key, $default = false) {
+		$stat = $this->getStat();
+
+		return $stat !== null && array_key_exists($key, $stat) ? $stat[$key] : $default;
 	}
 }
 ?>

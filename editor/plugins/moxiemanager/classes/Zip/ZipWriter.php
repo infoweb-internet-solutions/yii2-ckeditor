@@ -307,6 +307,7 @@ class MOXMAN_Zip_ZipWriter {
 		return $files;
 	}
 
+	// @codeCoverageIgnoreStart
 	private function utf8ToNative($path) {
 		if (DIRECTORY_SEPARATOR == "\\") {
 			$path = mb_convert_encoding($path, "Windows-1252", "UTF-8");
@@ -319,6 +320,7 @@ class MOXMAN_Zip_ZipWriter {
 
 		return $path;
 	}
+	// @codeCoverageIgnoreEnd
 }
 
 ?>

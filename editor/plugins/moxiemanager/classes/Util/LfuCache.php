@@ -26,7 +26,6 @@ class MOXMAN_Util_LfuCache {
 		$this->items = array();
 		$this->maxSize = isset($config["size"]) ? $config["size"] : 100;
 		$this->ttl = isset($config["ttl"]) ? $config["ttl"] : 60;
-		$this->cacheFile = isset($config["cachefile"]) ? $config["cachefile"] : "cache.dat";
 		$this->time = isset($config["time"]) ? $config["time"] : 0;
 	}
 

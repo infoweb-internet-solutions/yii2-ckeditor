@@ -57,11 +57,6 @@ class MOXMAN_Vfs_FileActionEventArgs extends MOXMAN_Util_EventArgs {
 	const ADD = "add";
 
 	/**
-	 * Update file action. For example when a file is modified in place.
-	 */
-	const UPDATE = "update";
-
-	/**
 	 * Move file action. Will be used when a file is moved or renamed.
 	 */
 	const MOVE = "move";
@@ -92,7 +87,6 @@ class MOXMAN_Vfs_FileActionEventArgs extends MOXMAN_Util_EventArgs {
 		switch ($action) {
 			case self::DELETE:
 			case self::ADD:
-			case self::UPDATE:
 			case self::MOVE:
 			case self::COPY:
 			case self::INSERT:
