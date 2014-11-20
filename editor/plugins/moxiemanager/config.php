@@ -1,16 +1,8 @@
 <?php
-
-// install Composer autoloader
-require(__DIR__ . '/../../../../../../vendor/autoload.php');
-
-// include Yii class file
-require(__DIR__ . '/../../../../../../vendor/yiisoft/yii2/Yii.php');
-
-// include aliases
-require(__DIR__ . '/../../../../../../common/config/bootstrap.php');
+session_start();
 
 // General
-$moxieManagerConfig['general.license'] = \Yii::getAlias('@moxieManagerKey');
+$moxieManagerConfig['general.license'] = $_SESSION['moxieman-license-key'];
 $moxieManagerConfig['general.hidden_tools'] = '';
 $moxieManagerConfig['general.disabled_tools'] = '';
 $moxieManagerConfig['general.plugins'] = 'AutoFormat,AutoRename,Favorites,History,Uploaded';
@@ -21,9 +13,9 @@ $moxieManagerConfig['general.temp_dir'] = '';
 $moxieManagerConfig['general.allow_override'] = 'hidden_tools,disabled_tools';
 
 // Filesystem
-$moxieManagerConfig['filesystem.rootpath'] = \Yii::getAlias('@uploadsBaseUrl');
+$moxieManagerConfig['filesystem.rootpath'] = $_SESSION['moxieman-filesystem-rootpath'];
 $moxieManagerConfig['filesystem.include_directory_pattern'] = '';
-$moxieManagerConfig['filesystem.exclude_directory_pattern'] = '/^mcith$/i';
+$moxieManagerConfig['filesystem.exclude_directory_pattern'] = '/^(mcith|cache)$/i';
 $moxieManagerConfig['filesystem.include_file_pattern'] = '';
 $moxieManagerConfig['filesystem.exclude_file_pattern'] = '';
 $moxieManagerConfig['filesystem.extensions'] = 'jpg,jpeg,png,gif,html,htm,txt,docx,doc,zip,pdf';
@@ -120,8 +112,8 @@ $moxieManagerConfig['authenticator'] = 'SessionAuthenticator';
 $moxieManagerConfig['authenticator.login_page'] = '';
 
 // SessionAuthenticator
-$moxieManagerConfig['SessionAuthenticator.logged_in_key'] = 'isLoggedIn';
-$moxieManagerConfig['SessionAuthenticator.user_key'] = 'user';
+$moxieManagerConfig['SessionAuthenticator.logged_in_key'] = 'moxieman-is-logged-in';
+$moxieManagerConfig['SessionAuthenticator.user_key'] = 'moxieman-user';
 $moxieManagerConfig['SessionAuthenticator.config_prefix'] = 'moxiemanager';
 
 // IpAuthenticator
@@ -134,8 +126,8 @@ $moxieManagerConfig['ExternalAuthenticator.basic_auth_user'] = '';
 $moxieManagerConfig['ExternalAuthenticator.basic_auth_password'] = '';
 
 // Local filesystem
-$moxieManagerConfig['filesystem.local.wwwroot'] = 'C:/wamp/www/www.vangompelrenette.be';
-$moxieManagerConfig['filesystem.local.urlprefix'] = 'http://localhost/www.vangompelrenette.be';
+$moxieManagerConfig['filesystem.local.wwwroot'] = $_SESSION['moxieman-filesystem-wwwroot'];
+$moxieManagerConfig['filesystem.local.urlprefix'] = $_SESSION['moxieman-filesystem-urlprefix'];
 $moxieManagerConfig['filesystem.local.urlsuffix'] = '';
 $moxieManagerConfig['filesystem.local.access_file_name'] = 'mc_access';
 $moxieManagerConfig['filesystem.local.cache'] = false;
