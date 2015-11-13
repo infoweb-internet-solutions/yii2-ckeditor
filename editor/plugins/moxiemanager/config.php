@@ -18,7 +18,7 @@ $moxieManagerConfig['filesystem.include_directory_pattern'] = '';
 $moxieManagerConfig['filesystem.exclude_directory_pattern'] = '/^(mcith|cache)$/i';
 $moxieManagerConfig['filesystem.include_file_pattern'] = '';
 $moxieManagerConfig['filesystem.exclude_file_pattern'] = '';
-$moxieManagerConfig['filesystem.extensions'] = 'jpg,jpeg,png,gif,html,htm,txt,docx,doc,zip,pdf';
+$moxieManagerConfig['filesystem.extensions'] = 'jpg,jpeg,png,gif,html,htm,txt,docx,doc,zip,pdf,xls,xlsx';
 $moxieManagerConfig['filesystem.readable'] = true;
 $moxieManagerConfig['filesystem.writable'] = true;
 $moxieManagerConfig['filesystem.directories'] = array(
@@ -47,7 +47,7 @@ $moxieManagerConfig['createdoc.allow_override'] = '*';
 // Upload
 $moxieManagerConfig['upload.include_file_pattern'] = '';
 $moxieManagerConfig['upload.exclude_file_pattern'] = '';
-$moxieManagerConfig['upload.extensions'] = '*';
+$moxieManagerConfig['upload.extensions'] = 'jpg,jpeg,png,gif,html,htm,txt,docx,doc,zip,pdf,xls,xlsx';
 $moxieManagerConfig['upload.maxsize'] = '100MB';
 $moxieManagerConfig['upload.overwrite'] = false;
 $moxieManagerConfig['upload.autoresize'] = false;
