@@ -14,7 +14,7 @@ class Assets extends AssetBundle{
     public $js = [
         'editor/ckeditor.js',
 		'js.js',
-		'config.js',
+		'editor/config.js',
     ];
 
 	public $depends = [
