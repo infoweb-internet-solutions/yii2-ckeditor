@@ -80,6 +80,9 @@ var CKBUILDER_CONFIG = {
 		'justify' : 1,
 		'language' : 1,
 		'link' : 1,
+                /* START: CUSTOM */
+                'entitylink': 1,
+                /* END: CUSTOM */
 		'list' : 1,
 		'liststyle' : 1,
 		'magicline' : 1,
