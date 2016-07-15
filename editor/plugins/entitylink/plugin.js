@@ -12,6 +12,22 @@
         }
     });
 
+    var currentCkeditorInstance;
+    var entityLanguage = 'nl';
+
+    /**
+     * Get current active ckeditor instance
+     */
+    for(var id in CKEDITOR.instances) {
+        CKEDITOR.instances[id].on('focus', function(e) {
+            // Fill some global var here
+            currentCkeditorInstance = e.editor.name;
+
+            // Select language
+            entityLanguage = CKEDITOR.instances[currentCkeditorInstance].name.split('-')[1];
+        });
+    }
+
     /**
      * If you want to customize a dialog window, the easiest and most convenient way is to enable the Developer Tools
      * plugin that displays the names and IDs of all dialog window elements when you hover them with your mouse.
@@ -99,9 +115,10 @@
                             url: CMS.getCkeditorEntitylinkConfiguration().url.getEntityUrl,
                             data: {
                                 entity: entity,
-                                entity_id: entityId
+                                entity_id: entityId,
+                                entity_language: entityLanguage
                             },
-                            success: function(result) {                                
+                            success: function(result) {
                                 if(result.status == 200) {
                                     entityUrl = result.url;
                                 }
@@ -194,7 +211,8 @@
                                 type: "POST",
                                 url: CMS.getCkeditorEntitylinkConfiguration().url.getEntities,
                                 data: {
-                                    entity: index
+                                    entity: index,
+                                    entity_language: entityLanguage
                                 },
                                 success: function(result) {
                                     if(result.status == 200) {
