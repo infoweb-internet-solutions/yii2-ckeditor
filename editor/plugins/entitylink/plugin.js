@@ -23,8 +23,8 @@
             // Fill some global var here
             currentCkeditorInstance = e.editor.name;
 
-            // Exception form module
-            var formWrapper = $('#'+currentCkeditorInstance).parents('.form-wrapper');
+            // Exception form module and maybe others?
+            var formWrapper = $('#'+currentCkeditorInstance).parents('.tab-pane-language');
             if(formWrapper.length != 0) {
                 entityLanguage = formWrapper.attr('data-lng');
             }
