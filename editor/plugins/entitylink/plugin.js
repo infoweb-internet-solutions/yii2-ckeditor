@@ -23,8 +23,15 @@
             // Fill some global var here
             currentCkeditorInstance = e.editor.name;
 
-            // Select language
-            entityLanguage = CKEDITOR.instances[currentCkeditorInstance].name.split('-')[1];
+            // Exception form module
+            var formWrapper = $('#'+currentCkeditorInstance).parents('.form-wrapper');
+            if(formWrapper.length != 0) {
+                entityLanguage = formWrapper.attr('data-lng');
+            }
+            else {
+                var nameAttributes = $('#'+currentCkeditorInstance).attr('name').replace(/]/g, '').split('[');
+                entityLanguage = nameAttributes[1];
+            }
         });
     }
 
